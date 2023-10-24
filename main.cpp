@@ -28,6 +28,39 @@ typedef HRESULT (*zgcs)(IUnknown* thiz, HSTRING* ret);
 
 zgcs zGetCalendarSystem;
 
+struct vt_iunknown
+{
+	zfnc _0;
+	zfnc _1;
+	zfnc _2;
+};
+
+struct vt_iinspectable
+{
+	vt_iunknown base;
+	zfnc _3;
+	zfnc _4;
+	zfnc _5;
+};
+
+struct zICalendar
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfnc _7;
+		zfnc _8;
+		zfnc _9;
+		zfnc _10;
+		zfnc _11;
+		zgcs GetCalendarSystem;
+	};
+
+	vt* vt;
+};
+
+
 void d_hstring(HSTRING p) {
 	WindowsDeleteString(p);
 }
@@ -54,13 +87,8 @@ void stuff()
 	if (FAILED(ii0.AsIID(mkuuid("CA30221D-86D9-40FB-A26B-D44EB7CF08EA"), &iu0)))
 		throw std::runtime_error("");
 
-	zgcs** obj = (zgcs**)iu0.Get();
-	zgcs*  vta = *obj;
-	zgcs*  vta12 = vta + 12;
-	zgcs   gcs = *vta12;
-
 	auto rr = make_unique<HSTRING>();
-	if (FAILED(gcs(iu0.Get(), rr.get())))
+	if (FAILED(((zICalendar*)iu0.Get())->vt->GetCalendarSystem(iu0.Get(), rr.get())))
 		throw std::runtime_error("");
 
 	println(cout, "{}", WSTR2STR(WindowsGetStringRawBuffer(*rr, NULL)));
