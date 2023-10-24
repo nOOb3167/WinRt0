@@ -4,6 +4,7 @@
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
+#include <memory>
 #include <locale>
 #include <codecvt>
 #include <format>
@@ -26,6 +27,10 @@ typedef HRESULT (*zgcs)(IUnknown* thiz, HSTRING* ret);
 #define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
 
 zgcs zGetCalendarSystem;
+
+void d_hstring(HSTRING p) {
+	WindowsDeleteString(p);
+}
 
 UUID mkuuid(std::string s)
 {
@@ -54,11 +59,11 @@ void stuff()
 	zgcs*  vta12 = vta + 12;
 	zgcs   gcs = *vta12;
 
-	HSTRING rr;
-	if (FAILED(gcs(iu0.Get(), &rr)))
+	auto rr = make_unique<HSTRING>();
+	if (FAILED(gcs(iu0.Get(), rr.get())))
 		throw std::runtime_error("");
 
-	println(cout, "{}", WSTR2STR(WindowsGetStringRawBuffer(rr, NULL)));
+	println(cout, "{}", WSTR2STR(WindowsGetStringRawBuffer(*rr, NULL)));
 }
 
 
