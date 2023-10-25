@@ -32,6 +32,9 @@
 #include <windows.foundation.h>
 #include <windows.devices.bluetooth.advertisement.h>
 
+UUID mkuuid(std::string s);
+void d_hstring(HSTRING p);
+
 namespace wrl = Microsoft::WRL;
 namespace wrlw = Microsoft::WRL::Wrappers;
 namespace ADV = ABI::Windows::Devices::Bluetooth::Advertisement;
@@ -60,6 +63,9 @@ typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegis
 
 [[maybe_unused]] UUID uuidTypedEventHandler = { 2648818996, 27361, 4576, 132, 225, 24, 169, 5, 188, 197, 63 }; // dont remember where i got this one
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 };
+UUID uuidIBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
+UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = mkuuid("27987DDF-E596-41BE-8D43-9E6731D4A913");
+UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = mkuuid("12D9C87B-0399-5F0E-A348-53B02B6B162E");
 
 struct vt_iunknown
 {
@@ -163,6 +169,22 @@ public:
   		return 0;
 	}
 	HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, IInspectable *args) override {
+		wrl::ComPtr<IUnknown> watcher_iu;
+		if (FAILED(sender->QueryInterface(uuidIBluetoothLEAdvertisementWatcher, &watcher_iu)))
+			throw std::runtime_error("");
+
+		wrl::ComPtr<IUnknown> args1_iu;
+		if (FAILED(args->QueryInterface(uuidIBluetoothLEAdvertisementReceivedEventArgs, &args1_iu)))
+			throw std::runtime_error("");
+		wrl::ComPtr<IUnknown> args2_iu;
+		if (FAILED(args->QueryInterface(uuidIBluetoothLEAdvertisementReceivedEventArgs2, &args2_iu)))
+			throw std::runtime_error("");
+
+		HSTRING rcn;
+		args->GetRuntimeClassName(&rcn);
+		ULONG ic;
+		IID* ia;
+		args->GetIids(&ic, &ia);
 		println(cout, "Invoke");
 		throw std::runtime_error("");
 	}
@@ -195,42 +217,20 @@ void stuff()
 	if (FAILED(RoActivateInstance(watcher_className.Get(), &watcher_ii)))
 		throw std::runtime_error("");
 
-	UUID watcher_uuid_IBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 	wrl::ComPtr<IUnknown> watcher_iu;
-	if (FAILED(watcher_ii.AsIID(watcher_uuid_IBluetoothLEAdvertisementWatcher, &watcher_iu)))
+	if (FAILED(watcher_ii.AsIID(uuidIBluetoothLEAdvertisementWatcher, &watcher_iu)))
 		throw std::runtime_error("");
 
 	((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->ScanningMode_Set(watcher_iu.Get(), (int32_t)zBluetoothLEScanningMode::Active);
 
-	class Z
-	{
-	public:
-		HRESULT Received(ADV::IBluetoothLEAdvertisementWatcher* sender, ADV::IBluetoothLEAdvertisementReceivedEventArgs* args)
-		{
-			println(cout, "Received");
-			return 0;
-		};
-	};
-
-	Z z;
-
-	// HRESULT E_POINTER 0x80004003
-	// [eventadd] HRESULT Received([in] Windows.Foundation.TypedEventHandler<Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcher*, Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementReceivedEventArgs*>* handler, [out][retval] EventRegistrationToken* token);
-	// is '[out][retval] EventRegistrationToken* token' mapped as an argument or as a return value? debugger says argument?
-	auto zzz = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received;
-	auto zzz2 = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start;
-
-	//((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(wrl::Callback<zfReceivedTEH>(&z, &Z::Received).Get());
-
-	// argument to Received has to be an ITypedEventHandler not a ComPtr
-	wrl::ComPtr<zfReceivedTEH> q = wrl::Callback<zfReceivedTEH>(&z, &Z::Received);
-
 	Cb* cb = new Cb();
-
 	EventRegistrationToken tok;
-	HRESULT r = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), (zfReceivedTEH *)cb, &tok);
-	//HRESULT r = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), q.Get(), &tok);
-	((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(watcher_iu.Get());
+
+	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), (zfReceivedTEH *)cb, &tok)))
+		throw std::runtime_error("");
+
+	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(watcher_iu.Get())))
+		throw std::runtime_error("");
 
 	Sleep(10000);
 
