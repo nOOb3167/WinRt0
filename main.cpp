@@ -8,6 +8,13 @@
 //       Callback<ITypedEventHandler<RadialController*, RadialControllerScreenContactContinuedEventArgs*>>(this, &DeviceListener::OnScreenContactContinued).Get(),
 //       & _screenContactContinuedToken));
 
+// https://www.codeproject.com/script/Articles/ViewDownloads.aspx?aid=338268
+//   create COM with no ATL, just C++
+
+// https://learn.microsoft.com/en-us/previous-versions/hh438425(v=vs.85)
+//   The ITypedEventHandler<TSender,TArgs> interface inherits from the IUnknown interface. ITypedEventHandler also has these types of members:
+//     ITypedEventHandler::Invoke
+
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
 #include <memory>
@@ -50,7 +57,9 @@ typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegis
 
 #define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
 
-zgcs zGetCalendarSystem;
+
+[[maybe_unused]] UUID uuidTypedEventHandler = { 2648818996, 27361, 4576, 132, 225, 24, 169, 5, 188, 197, 63 }; // dont remember where i got this one
+UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 };
 
 struct vt_iunknown
 {
@@ -121,6 +130,45 @@ UUID mkuuid(std::string s)
 }
 
 
+class ICb : public IUnknown
+{
+public:
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable* sender, IInspectable* args) = 0;
+};
+
+class Cb : public ICb
+{
+protected:
+	volatile long m_ref;
+public:
+	Cb() : m_ref(1) {}
+	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
+		*ppv = NULL;
+		if (!(riid == IID_IUnknown || riid == uuidTypedEventHandlerReceivedTEH))
+			return E_NOINTERFACE;
+		this->AddRef();
+		*ppv = this;
+
+		return S_OK;
+	}
+	ULONG   STDMETHODCALLTYPE AddRef(void) override {
+		InterlockedIncrement(&m_ref);
+		return this->m_ref;
+	}
+	ULONG   STDMETHODCALLTYPE Release(void) override {
+		InterlockedDecrement(&m_ref);
+		if (m_ref > 0)
+			return m_ref;
+  		delete this;
+  		return 0;
+	}
+	HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, IInspectable *args) override {
+		println(cout, "Invoke");
+		throw std::runtime_error("");
+	}
+};
+
+
 void stuff()
 {
 	wrlw::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
@@ -177,8 +225,11 @@ void stuff()
 	// argument to Received has to be an ITypedEventHandler not a ComPtr
 	wrl::ComPtr<zfReceivedTEH> q = wrl::Callback<zfReceivedTEH>(&z, &Z::Received);
 
+	Cb* cb = new Cb();
+
 	EventRegistrationToken tok;
-	HRESULT r = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), q.Get(), &tok);
+	HRESULT r = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), (zfReceivedTEH *)cb, &tok);
+	//HRESULT r = ((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), q.Get(), &tok);
 	((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(watcher_iu.Get());
 
 	Sleep(10000);
