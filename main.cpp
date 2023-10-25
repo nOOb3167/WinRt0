@@ -32,6 +32,8 @@
 #include <windows.foundation.h>
 #include <windows.devices.bluetooth.advertisement.h>
 
+#define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
+
 UUID mkuuid(std::string s);
 void d_hstring(HSTRING p);
 
@@ -49,17 +51,12 @@ enum class zBluetoothLEScanningMode : int32_t
 };
 
 typedef void (*zfnc)(void);
-typedef HRESULT (*zgcs)(IUnknown* thiz, HSTRING* ret);
+typedef HRESULT (*zGetCalendarSystem)(IUnknown* thiz, HSTRING* ret);
 typedef ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*> zfReceivedTEH;
 
 typedef HRESULT (*zfScanningMode_Set)(IUnknown* thiz, int32_t bluetoothLEScanningMode);
 typedef HRESULT(*zfStart)(IUnknown* thiz);
-//typedef void (*zfReceived)(zfReceivedTEH* handler, void *);
 typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegistrationToken *tok);
-
-
-#define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
-
 
 [[maybe_unused]] UUID uuidTypedEventHandler = { 2648818996, 27361, 4576, 132, 225, 24, 169, 5, 188, 197, 63 }; // dont remember where i got this one
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 };
@@ -93,7 +90,7 @@ struct zICalendar
 		zfnc _9;
 		zfnc _10;
 		zfnc _11;
-		zgcs GetCalendarSystem;
+		zGetCalendarSystem GetCalendarSystem;
 	};
 	vt* vt;
 };
@@ -123,7 +120,8 @@ struct zIBluetoothLEAdvertisementWatcher
 };
 
 
-void d_hstring(HSTRING p) {
+void d_hstring(HSTRING p)
+{
 	WindowsDeleteString(p);
 }
 
@@ -136,13 +134,7 @@ UUID mkuuid(std::string s)
 }
 
 
-class ICb : public IUnknown
-{
-public:
-	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable* sender, IInspectable* args) = 0;
-};
-
-class Cb : public ICb
+class Cb : public IUnknown
 {
 protected:
 	volatile long m_ref;
@@ -168,7 +160,7 @@ public:
   		delete this;
   		return 0;
 	}
-	HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, IInspectable *args) override {
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, IInspectable *args) {
 		wrl::ComPtr<IUnknown> watcher_iu;
 		if (FAILED(sender->QueryInterface(uuidIBluetoothLEAdvertisementWatcher, &watcher_iu)))
 			throw std::runtime_error("");
