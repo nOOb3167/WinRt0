@@ -306,14 +306,10 @@ void stuff()
 
 	ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>* zzz = fbaa_op.Get();
 
-	UUID uuidx = __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*>);
-	UUID uuidy = __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>);
-	UUID uuidw = __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>);
-
 	if (FAILED(fbaa_op->put_Completed((ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>*)cb2)))
 		throw std::runtime_error("");
 	cb2->m_completed.wait();
-	ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice* ledev = nullptr;
+	wrl::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> ledev;
 	if (FAILED(fbaa_op->GetResults(&ledev)))
 		throw std::runtime_error("");
 	println(cout, "");
