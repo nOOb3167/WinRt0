@@ -55,14 +55,16 @@ typedef HRESULT (*zGetCalendarSystem)(IUnknown* thiz, HSTRING* ret);
 typedef ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*> zfReceivedTEH;
 
 typedef HRESULT (*zfScanningMode_Set)(IUnknown* thiz, int32_t bluetoothLEScanningMode);
-typedef HRESULT(*zfStart)(IUnknown* thiz);
+typedef HRESULT (*zfStart)(IUnknown* thiz);
 typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegistrationToken *tok);
+typedef HRESULT (*zfBluetoothAddress)(IUnknown* thiz, uint64_t *value);
 
 [[maybe_unused]] UUID uuidTypedEventHandler = { 2648818996, 27361, 4576, 132, 225, 24, 169, 5, 188, 197, 63 }; // dont remember where i got this one
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 };
 UUID uuidIBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = mkuuid("27987DDF-E596-41BE-8D43-9E6731D4A913");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = mkuuid("12D9C87B-0399-5F0E-A348-53B02B6B162E");
+UUID uuidIBluetoothLEDeviceStatics = mkuuid("C8CF1A19-F0B6-4BF0-8689-41303DE2D9F4");
 
 struct vt_iunknown
 {
@@ -120,6 +122,18 @@ struct zIBluetoothLEAdvertisementWatcher
 };
 
 
+struct zIBluetoothLEAdvertisementReceivedEventArgs
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfBluetoothAddress BluetoothAddress;
+	};
+	vt* vt;
+};
+
+
 void d_hstring(HSTRING p)
 {
 	WindowsDeleteString(p);
@@ -172,14 +186,21 @@ public:
 		if (FAILED(args->QueryInterface(uuidIBluetoothLEAdvertisementReceivedEventArgs2, &args2_iu)))
 			throw std::runtime_error("");
 
+		uint64_t addr = 0;
+		if (FAILED(((zIBluetoothLEAdvertisementReceivedEventArgs*)args1_iu.Get())->vt->BluetoothAddress(args1_iu.Get(), &addr)))
+			throw std::runtime_error("");
+		m_addr = addr;
+
 		HSTRING rcn;
 		args->GetRuntimeClassName(&rcn);
 		ULONG ic;
 		IID* ia;
 		args->GetIids(&ic, &ia);
 		println(cout, "Invoke");
-		throw std::runtime_error("");
+		return S_OK;
 	}
+
+	uint64_t m_addr = 0;
 };
 
 
@@ -224,7 +245,16 @@ void stuff()
 	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(watcher_iu.Get())))
 		throw std::runtime_error("");
 
-	Sleep(10000);
+	Sleep(5000);
+
+	//RoGetActivationFactory(wrlw::HStringReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice"), IID___x_ABI_CWindows_CDevices_CBluetooth_CIBluetoothLEDeviceStatics)
+	wrl::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDeviceStatics> ledevicesta;
+	if (FAILED(ABI::Windows::Foundation::GetActivationFactory(wrlw::HString::MakeReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice").Get(), &ledevicesta)))
+		throw std::runtime_error("");
+
+	wrl::ComPtr<ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>> fbaa_op;
+	if (FAILED(ledevicesta->FromBluetoothAddressAsync(cb->m_addr, &fbaa_op)))
+		throw std::runtime_error("");
 
 	println(cout, "");
 }
