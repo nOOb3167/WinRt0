@@ -33,6 +33,7 @@
 
 #include <windows.foundation.h>
 #include <windows.devices.bluetooth.advertisement.h>
+#include <windows.devices.bluetooth.genericattributeprofile.h>
 
 #define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
 
@@ -52,6 +53,12 @@ enum class zBluetoothLEScanningMode : int32_t
 	None = 2,
 };
 
+enum class zBluetoothCacheMode : int32_t
+{
+	Cached = 0,
+	Uncached = 1
+};
+
 typedef void (*zfnc)(void);
 typedef HRESULT (*zGetCalendarSystem)(IUnknown* thiz, HSTRING* ret);
 typedef ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*> zfReceivedTEH;
@@ -61,14 +68,23 @@ typedef HRESULT (*zfStart)(IUnknown* thiz);
 typedef HRESULT (*zfStop)(IUnknown* thiz);
 typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegistrationToken *tok);
 typedef HRESULT (*zfBluetoothAddress)(IUnknown* thiz, uint64_t *value);
+typedef HRESULT (*zfGetGattServicesWithCacheModeAsync)(IUnknown* thiz, int32_t bluetoothCacheMode, IUnknown** out);
+typedef HRESULT (*zfPut_Completed)(IUnknown* thiz, IUnknown* handler);
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = mkuuid("27987DDF-E596-41BE-8D43-9E6731D4A913");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = mkuuid("12D9C87B-0399-5F0E-A348-53B02B6B162E");
 UUID uuidIBluetoothLEDeviceStatics = mkuuid("C8CF1A19-F0B6-4BF0-8689-41303DE2D9F4");
+UUID uuidIBluetoothLEDevice3 = mkuuid("AEE9E493-44AC-40DC-AF33-B2C13C01CA46");
 UUID uuidIAsyncOperation__BluetoothLEDevice__ = { 929013095, 29858, 24465, 161, 29, 22, 144, 147, 113, 141, 65 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
-UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>);
+UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
+//wrong UUID uuidIAsyncOperation__IGattDeviceServicesResult__ = { 387830766, 365, 16797, 131, 138, 87, 108, 244, 117, 163, 216 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult>)
+UUID uuidIGattDeviceServicesResult = mkuuid("171DD3EE-016D-419D-838A-576CF475A3D8"); // Windows.Devices.Bluetooth.GenericAttributeProfile.0.h
+UUID uuidIAsyncOperation__GattDeviceServicesResult_star__ = { 3888539638, 59508, 20495, 134, 255, 118, 12, 166, 240, 122, 88 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
+UUID uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ = { 1957365906, 42545, 23916, 177, 180, 189, 46, 26, 116, 26, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult*>)
+UUID uuidR = __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>);
+UUID uuidR3 = __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>);
 
 struct vt_iunknown
 {
@@ -137,6 +153,34 @@ struct zIBluetoothLEAdvertisementReceivedEventArgs
 	vt* vt;
 };
 
+
+struct zIBluetoothLEDevice3
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfnc _7;
+		zfnc _8;
+		zfGetGattServicesWithCacheModeAsync GetGattServicesWithCacheModeAsync;
+	};
+
+	vt* vt;
+};
+
+
+struct zIAsyncOperation
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfPut_Completed Put_Completed;
+		zfnc _7;
+		zfnc Get_Results;
+	};
+
+	vt* vt;
+};
 
 void d_hstring(HSTRING p)
 {
@@ -229,9 +273,39 @@ public:
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override { return (*ppv = (riid == IID_IUnknown || riid == uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__) ? (this->AddRef(), this) : nullptr) ? S_OK : E_NOINTERFACE; }
 	ULONG   STDMETHODCALLTYPE AddRef(void) override { InterlockedIncrement(&m_ref); return this->m_ref; }
 	ULONG   STDMETHODCALLTYPE Release(void) override { InterlockedDecrement(&m_ref); if (m_ref > 0) return m_ref; delete this; return 0; }
-	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, int32_t value) {
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender) {
 		wrl::ComPtr<IUnknown> _iu;
 		if (FAILED(sender->QueryInterface(uuidIAsyncOperation__BluetoothLEDevice__, &_iu)))
+			throw std::runtime_error("");
+
+		HSTRING rcn;
+		sender->GetRuntimeClassName(&rcn);
+		ULONG ic;
+		IID* ia;
+		sender->GetIids(&ic, &ia);
+		println(cout, "Invoke");
+
+		m_completed.signal();
+
+		return S_OK;
+	}
+};
+
+
+class Cb3 : public IUnknown
+{
+protected:
+	volatile long m_ref;
+public:
+	MCompleted m_completed;
+public:
+	Cb3() : m_ref(1) {}
+	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override { return (*ppv = (riid == IID_IUnknown || riid == uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__) ? (this->AddRef(), this) : nullptr) ? S_OK : E_NOINTERFACE; }
+	ULONG   STDMETHODCALLTYPE AddRef(void) override { InterlockedIncrement(&m_ref); return this->m_ref; }
+	ULONG   STDMETHODCALLTYPE Release(void) override { InterlockedDecrement(&m_ref); if (m_ref > 0) return m_ref; delete this; return 0; }
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable* sender) {
+		wrl::ComPtr<IUnknown> _iu;
+		if (FAILED(sender->QueryInterface(uuidIAsyncOperation__GattDeviceServicesResult_star__, &_iu)))
 			throw std::runtime_error("");
 
 		HSTRING rcn;
@@ -267,7 +341,6 @@ void stuff()
 
 	println(cout, "{}", WSTR2STR(WindowsGetStringRawBuffer(*rr, NULL)));
 
-
 	wrlw::HStringReference watcher_className(L"Windows.Devices.Bluetooth.Advertisement.BluetoothLEAdvertisementWatcher");
 
 	wrl::ComPtr<IInspectable> watcher_ii;
@@ -282,6 +355,7 @@ void stuff()
 
 	Cb* cb = new Cb();
 	Cb2* cb2 = new Cb2();
+	Cb3* cb3 = new Cb3();
 	EventRegistrationToken tok;
 
 	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Received(watcher_iu.Get(), (zfReceivedTEH *)cb, &tok)))
@@ -304,14 +378,29 @@ void stuff()
 	if (FAILED(ledevicesta->FromBluetoothAddressAsync(cb->m_addr, &fbaa_op)))
 		throw std::runtime_error("");
 
-	ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>* zzz = fbaa_op.Get();
-
 	if (FAILED(fbaa_op->put_Completed((ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>*)cb2)))
 		throw std::runtime_error("");
 	cb2->m_completed.wait();
 	wrl::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> ledev;
+	wrl::ComPtr<IUnknown> ledev3;
 	if (FAILED(fbaa_op->GetResults(&ledev)))
 		throw std::runtime_error("");
+
+	if (FAILED(ledev.AsIID(uuidIBluetoothLEDevice3, &ledev3)))
+		throw std::runtime_error("");
+
+	wrl::ComPtr<IUnknown> ggswcma_op;
+	if (FAILED(((zIBluetoothLEDevice3*)ledev3.Get())->vt->GetGattServicesWithCacheModeAsync(ledev3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &ggswcma_op)))
+		throw std::runtime_error("");
+
+	wrl::ComPtr<IUnknown> qqq;
+	if (FAILED(ggswcma_op->QueryInterface(uuidIAsyncOperation__GattDeviceServicesResult_star__, &qqq)))
+		throw std::runtime_error("");
+
+	if (FAILED(((zIAsyncOperation*)qqq.Get())->vt->Put_Completed(qqq.Get(), cb3)))
+		throw std::runtime_error("");
+	cb3->m_completed.wait();
+
 	println(cout, "");
 }
 
