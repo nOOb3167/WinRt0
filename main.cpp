@@ -58,17 +58,17 @@ typedef ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertiseme
 
 typedef HRESULT (*zfScanningMode_Set)(IUnknown* thiz, int32_t bluetoothLEScanningMode);
 typedef HRESULT (*zfStart)(IUnknown* thiz);
+typedef HRESULT (*zfStop)(IUnknown* thiz);
 typedef HRESULT (*zfReceived)(IUnknown *thiz, zfReceivedTEH* handler, EventRegistrationToken *tok);
 typedef HRESULT (*zfBluetoothAddress)(IUnknown* thiz, uint64_t *value);
 
-[[maybe_unused]] UUID uuidTypedEventHandler = { 2648818996, 27361, 4576, 132, 225, 24, 169, 5, 188, 197, 63 }; // dont remember where i got this one
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = mkuuid("27987DDF-E596-41BE-8D43-9E6731D4A913");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = mkuuid("12D9C87B-0399-5F0E-A348-53B02B6B162E");
 UUID uuidIBluetoothLEDeviceStatics = mkuuid("C8CF1A19-F0B6-4BF0-8689-41303DE2D9F4");
 UUID uuidIAsyncOperation__BluetoothLEDevice__ = { 929013095, 29858, 24465, 161, 29, 22, 144, 147, 113, 141, 65 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
-UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
+UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>);
 
 struct vt_iunknown
 {
@@ -119,7 +119,7 @@ struct zIBluetoothLEAdvertisementWatcher
 		zfnc _15;
 		zfnc _16;
 		zfStart Start;
-		zfnc _18;
+		zfStop Stop;
 		zfReceived Received;
 	};
 	vt* vt;
@@ -179,6 +179,8 @@ class Cb : public IUnknown
 protected:
 	volatile long m_ref;
 public:
+	MCompleted m_completed;
+public:
 	Cb() : m_ref(1) {}
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override { return (*ppv = (riid == IID_IUnknown || riid == uuidTypedEventHandlerReceivedTEH) ? (this->AddRef(), this) : nullptr) ? S_OK : E_NOINTERFACE; }
 	ULONG   STDMETHODCALLTYPE AddRef(void) override { InterlockedIncrement(&m_ref); return this->m_ref; }
@@ -206,6 +208,9 @@ public:
 		IID* ia;
 		args->GetIids(&ic, &ia);
 		println(cout, "Invoke");
+
+		m_completed.signal();
+
 		return S_OK;
 	}
 
@@ -285,7 +290,10 @@ void stuff()
 	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Start(watcher_iu.Get())))
 		throw std::runtime_error("");
 
-	Sleep(5000);
+	cb->m_completed.wait();
+
+	if (FAILED(((zIBluetoothLEAdvertisementWatcher*)watcher_iu.Get())->vt->Stop(watcher_iu.Get())))
+		throw std::runtime_error("");
 
 	//RoGetActivationFactory(wrlw::HStringReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice"), IID___x_ABI_CWindows_CDevices_CBluetooth_CIBluetoothLEDeviceStatics)
 	wrl::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDeviceStatics> ledevicesta;
