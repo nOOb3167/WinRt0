@@ -180,26 +180,9 @@ protected:
 	volatile long m_ref;
 public:
 	Cb() : m_ref(1) {}
-	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override {
-		*ppv = NULL;
-		if (!(riid == IID_IUnknown || riid == uuidTypedEventHandlerReceivedTEH))
-			return E_NOINTERFACE;
-		this->AddRef();
-		*ppv = this;
-
-		return S_OK;
-	}
-	ULONG   STDMETHODCALLTYPE AddRef(void) override {
-		InterlockedIncrement(&m_ref);
-		return this->m_ref;
-	}
-	ULONG   STDMETHODCALLTYPE Release(void) override {
-		InterlockedDecrement(&m_ref);
-		if (m_ref > 0)
-			return m_ref;
-  		delete this;
-  		return 0;
-	}
+	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override { return (*ppv = (riid == IID_IUnknown || riid == uuidTypedEventHandlerReceivedTEH) ? (this->AddRef(), this) : nullptr) ? S_OK : E_NOINTERFACE; }
+	ULONG   STDMETHODCALLTYPE AddRef(void) override { InterlockedIncrement(&m_ref); return this->m_ref; }
+	ULONG   STDMETHODCALLTYPE Release(void) override { InterlockedDecrement(&m_ref); if (m_ref > 0) return m_ref; delete this; return 0; }
 	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *sender, IInspectable *args) {
 		wrl::ComPtr<IUnknown> watcher_iu;
 		if (FAILED(sender->QueryInterface(uuidIBluetoothLEAdvertisementWatcher, &watcher_iu)))
