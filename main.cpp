@@ -197,6 +197,14 @@ struct zIAsyncOperation
 };
 
 
+template<typename T>
+bool ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
+{
+	wrl::ComPtr<IUnknown> tmp;
+	return FAILED(obj->QueryInterface(uuid, &tmp));
+}
+
+
 template<typename T, typename U>
 decltype(T::vt) GetVt(wrl::ComPtr<U> u) { return ((T*)u.Get())->vt; }
 
@@ -358,10 +366,9 @@ void stuff()
 	wrl::ComPtr<IUnknown> ggswcma_op;
 	CHK(GetVt<zIBluetoothLEDevice3>(ledev3)->GetGattServicesWithCacheModeAsync(ledev3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &ggswcma_op));
 
-	wrl::ComPtr<IUnknown> qqq;
-	CHK(ggswcma_op->QueryInterface(uuidIAsyncOperation__GattDeviceServicesResult_star__, &qqq));
+	CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, ggswcma_op));
 
-	CHK(GetVt<zIAsyncOperation>(qqq)->Put_Completed(qqq.Get(), cb3.Get()));
+	CHK(GetVt<zIAsyncOperation>(ggswcma_op)->Put_Completed(ggswcma_op.Get(), cb3.Get()));
 
 	cb3->m_completed.wait();
 
