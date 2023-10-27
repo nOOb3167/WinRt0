@@ -88,6 +88,10 @@ UUID uuidIBluetoothLEAdvertisement = { 107983543, 13265, 20093, 131, 103, 207, 1
 UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129, 209, 41, 103, 105, 34, 122, 8 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceService*>)
 
 
+// special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
+UUID uuidBluetoothBaseUUID = MakeUUID("{00000000-0000-1000-8000-00805F9B34FB}");
+
+
 struct vt_iunknown
 {
 	zfnc _0;

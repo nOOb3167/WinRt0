@@ -43,6 +43,21 @@ using namespace bt;
 using namespace std;
 
 
+uint16_t uint16FromBluetoothServiceUUID(UUID serviceUUID)
+{
+	// check that UUID is of the form 0000XXXX-0000-1000-8000-00805F9B34FB and return the XXXX returning FFFF otherwise
+	if (serviceUUID.Data1 & 0xFFFF0000 || serviceUUID.Data2 != uuidBluetoothBaseUUID.Data2 || serviceUUID.Data3 != uuidBluetoothBaseUUID.Data3 || memcmp(serviceUUID.Data4, uuidBluetoothBaseUUID.Data4, 8) != 0)
+		return 0xFFFF;
+	return serviceUUID.Data1;
+}
+
+
+bool isStandardServiceUUID(UUID serviceUUID)
+{
+	return uint16FromBluetoothServiceUUID(serviceUUID) != 0xFFFF;
+}
+
+
 void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown> *outBluetoothLEDevice, wrl::ComPtr<IUnknown>* outBluetoothLEDevice3)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDeviceStatics;
