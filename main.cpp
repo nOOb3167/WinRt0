@@ -32,21 +32,21 @@
 #include <windows.h>
 #include <wrl.h>
 
-#include <windows.foundation.h>
-#include <windows.devices.bluetooth.advertisement.h>
-#include <windows.devices.bluetooth.genericattributeprofile.h>
 
 #define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
 #define CHK(x) { if (FAILED(x)) throw std::runtime_error("Failure[" #x "]"); }
 
+
 UUID mkuuid(std::string s);
 void d_hstring(HSTRING p);
 
+
 namespace wrl = Microsoft::WRL;
 namespace wrlw = Microsoft::WRL::Wrappers;
-namespace ADV = ABI::Windows::Devices::Bluetooth::Advertisement;
+
 
 using namespace std;
+
 
 enum class zBluetoothLEScanningMode : int32_t
 {
@@ -55,15 +55,23 @@ enum class zBluetoothLEScanningMode : int32_t
 	None = 2,
 };
 
+
 enum class zBluetoothCacheMode : int32_t
 {
 	Cached = 0,
 	Uncached = 1
 };
 
-typedef void (*zfnc)(void);
-typedef HRESULT (*zGetCalendarSystem)(IUnknown* thiz, HSTRING* ret);
-typedef ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*> zfReceivedTEH;
+
+struct do_not_call_t
+{
+private:
+	do_not_call_t() {}
+};
+
+
+typedef void (*zfnc)(do_not_call_t);
+
 
 typedef HRESULT (*zfScanningMode_Set)(IUnknown* thiz, int32_t bluetoothLEScanningMode);
 typedef HRESULT (*zfStart)(IUnknown* thiz);
@@ -75,7 +83,8 @@ typedef HRESULT (*zfGetGattServicesWithCacheModeAsync)(IUnknown* thiz, int32_t b
 typedef HRESULT (*zfPut_Completed)(IUnknown* thiz, IUnknown* handler);
 typedef HRESULT (*zfGetResults)(IUnknown* thiz, IUnknown** out);
 
-UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ADV::BluetoothLEAdvertisementWatcher*, ADV::BluetoothLEAdvertisementReceivedEventArgs*>)
+
+UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = mkuuid("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = mkuuid("27987DDF-E596-41BE-8D43-9E6731D4A913");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = mkuuid("12D9C87B-0399-5F0E-A348-53B02B6B162E");
@@ -83,12 +92,9 @@ UUID uuidIBluetoothLEDeviceStatics = mkuuid("C8CF1A19-F0B6-4BF0-8689-41303DE2D9F
 UUID uuidIBluetoothLEDevice3 = mkuuid("AEE9E493-44AC-40DC-AF33-B2C13C01CA46");
 UUID uuidIAsyncOperation__BluetoothLEDevice__ = { 929013095, 29858, 24465, 161, 29, 22, 144, 147, 113, 141, 65 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
 UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
-//wrong UUID uuidIAsyncOperation__IGattDeviceServicesResult__ = { 387830766, 365, 16797, 131, 138, 87, 108, 244, 117, 163, 216 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult>)
-UUID uuidIGattDeviceServicesResult = mkuuid("171DD3EE-016D-419D-838A-576CF475A3D8"); // Windows.Devices.Bluetooth.GenericAttributeProfile.0.h
 UUID uuidIAsyncOperation__GattDeviceServicesResult_star__ = { 3888539638, 59508, 20495, 134, 255, 118, 12, 166, 240, 122, 88 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
-UUID uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ = { 1957365906, 42545, 23916, 177, 180, 189, 46, 26, 116, 26, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult*>)
-UUID uuidR = __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>);
-UUID uuidR3 = __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>);
+UUID uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ = { 1957365906, 42545, 23916, 177, 180, 189, 46, 26, 116, 26, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
+
 
 struct vt_iunknown
 {
@@ -97,28 +103,13 @@ struct vt_iunknown
 	zfnc _2;
 };
 
+
 struct vt_iinspectable
 {
 	vt_iunknown base;
 	zfnc _3;
 	zfnc _4;
 	zfnc _5;
-};
-
-struct zICalendar
-{
-	struct vt
-	{
-		vt_iinspectable base;
-		zfnc _6;
-		zfnc _7;
-		zfnc _8;
-		zfnc _9;
-		zfnc _10;
-		zfnc _11;
-		zGetCalendarSystem GetCalendarSystem;
-	};
-	vt* vt;
 };
 
 
@@ -197,6 +188,13 @@ struct zIAsyncOperation
 };
 
 
+bool ComIsA(const UUID &uuid, IUnknown *obj)
+{
+	wrl::ComPtr<IUnknown> tmp;
+	return FAILED(obj->QueryInterface(uuid, &tmp));
+}
+
+
 template<typename T>
 bool ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
 {
@@ -213,6 +211,7 @@ void d_hstring(HSTRING p)
 {
 	WindowsDeleteString(p);
 }
+
 
 UUID mkuuid(std::string s)
 {
@@ -311,9 +310,7 @@ public:
 	ULONG   STDMETHODCALLTYPE AddRef(void) override { InterlockedIncrement(&m_ref); return this->m_ref; }
 	ULONG   STDMETHODCALLTYPE Release(void) override { InterlockedDecrement(&m_ref); if (m_ref > 0) return m_ref; delete this; return 0; }
 	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable* sender) {
-		wrl::ComPtr<IUnknown> op;
-		
-		CHK(sender->QueryInterface(uuidIAsyncOperation__GattDeviceServicesResult_star__, &op));
+		CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, sender));
 
 		m_completed.signal();
 
