@@ -70,10 +70,49 @@ void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown>
 }
 
 
+wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLEDevice3)
+{
+	wrl::ComPtr<IUnknown> gattResult;
+	int32_t status;
+
+	wrl::ComPtr<IUnknown> asyncOperation;
+
+	MCompleted completed;
+	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__> cb3 = new ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__(
+		[&completed]() {
+			completed.signal();
+		}
+	);
+
+	CHK(GetVt<zIBluetoothLEDevice3>(bluetoothLEDevice3)->GetGattServicesWithCacheModeAsync(bluetoothLEDevice3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
+
+	CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, asyncOperation));
+
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb3.Get()));
+
+	completed.wait();
+
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattResult));
+
+	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Status(gattResult.Get(), &status));
+	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
+
+	return gattResult;
+}
+
+
 void probe(const ScannedDevice& scannedDevice)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
 	wrl::ComPtr<IUnknown> bluetoothLEDevice3;
+
+	wrl::ComPtr<IUnknown> services;
+	uint32_t size_serv = 0;
+	uint32_t ncopied_serv = 0;
+	std::vector<IUnknown*> serv;
+	std::vector<UUID> uuid;
+
+	size_t FIXME_VERY_BIG = 256;
 
 	deviceFromBluetoothAddress(scannedDevice.m_bluetoothAddress, &bluetoothLEDevice, &bluetoothLEDevice3);
 
@@ -84,30 +123,24 @@ void probe(const ScannedDevice& scannedDevice)
 		}
 	);
 
-	MCompleted cb3mcompleted;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__> cb3 = new ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__(
-		[&cb3mcompleted]() {
-			cb3mcompleted.signal();
-		}
-	);
+	wrl::ComPtr<IUnknown> gattResult = gattDeviceServicesResult(bluetoothLEDevice3);
 
-	wrl::ComPtr<IUnknown> ggswcma_op;
-	CHK(GetVt<zIBluetoothLEDevice3>(bluetoothLEDevice3)->GetGattServicesWithCacheModeAsync(bluetoothLEDevice3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &ggswcma_op));
+	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Services(gattResult.Get(), &services));
+	CHK(ComIsA(uuidIVectorView__GattDeviceService_star__, services.Get()));
 
-	CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, ggswcma_op));
+	CHK(GetVt<zIVectorView>(services)->Size(services.Get(), &size_serv));
+	CHK(size_serv < FIXME_VERY_BIG ? S_OK : E_FAIL);
 
-	CHK(GetVt<zIAsyncOperation>(ggswcma_op)->Put_Completed(ggswcma_op.Get(), cb3.Get()));
+	serv = std::vector<IUnknown*>(size_serv);
+	uuid = std::vector<UUID>(size_serv);
 
-	cb3mcompleted.wait();
+	CHK(GetVt<zIVectorView>(services)->GetMany(services.Get(), 0, size_serv, serv.data(), &ncopied_serv));
 
-	wrl::ComPtr<IUnknown> gdsr;
-	int32_t gdsr_status = 0;
-
-	CHK(GetVt<zIAsyncOperation>(ggswcma_op)->GetResults(ggswcma_op.Get(), &gdsr));
-
-	CHK(GetVt<zIGattDeviceServicesResult>(gdsr)->Status(gdsr.Get(), &gdsr_status));
-
-	CHK(gdsr_status == 0 ? S_OK : E_FAIL);
+	for (auto & v : serv) {
+		UUID u;
+		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v, &u));
+		uuid.push_back(u);
+	}
 }
 
 

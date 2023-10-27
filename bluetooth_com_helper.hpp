@@ -45,6 +45,12 @@ bool ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
 }
 
 
+template<typename T>
+decltype(T::vt) GetVt(IUnknown* u) {
+	return ((T*)u)->vt;
+}
+
+
 template<typename T, typename U>
 decltype(T::vt) GetVt(wrl::ComPtr<U> u) {
 	return ((T*)u.Get())->vt;

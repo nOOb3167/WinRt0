@@ -68,6 +68,10 @@ typedef HRESULT (*zfGetGattServicesWithCacheModeAsync)(IUnknown* thiz, int32_t b
 typedef HRESULT (*zfPut_Completed)(IUnknown* thiz, IUnknown* handler);
 typedef HRESULT (*zfGetResults)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfStatus)(IUnknown* thiz, int32_t *out);
+typedef HRESULT (*zfServices)(IUnknown* thiz, IUnknown** out);
+typedef HRESULT (*zfSize)(IUnknown* thiz, uint32_t* value);
+typedef HRESULT (*zfGetMany)(IUnknown* thiz, uint32_t start_index, uint32_t size_o_items, IUnknown** o_items, uint32_t* o_ncopied); // FIXME: this is for returning IUnknown - o_items will differ for other types
+typedef HRESULT(*zfUuid)(IUnknown* thiz, UUID* value);
 
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
@@ -81,6 +85,7 @@ UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50
 UUID uuidIAsyncOperation__GattDeviceServicesResult_star__ = { 3888539638, 59508, 20495, 134, 255, 118, 12, 166, 240, 122, 88 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
 UUID uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ = { 1957365906, 42545, 23916, 177, 180, 189, 46, 26, 116, 26, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
 UUID uuidIBluetoothLEAdvertisement = { 107983543, 13265, 20093, 131, 103, 207, 129, 208, 247, 150, 83 }; // __uuidof(ABI::Windows::Devices::Bluetooth::Advertisement::IBluetoothLEAdvertisement)
+UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129, 209, 41, 103, 105, 34, 122, 8 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceService*>)
 
 
 struct vt_iunknown
@@ -185,7 +190,35 @@ struct zIGattDeviceServicesResult
 		vt_iinspectable base;
 		zfStatus Status;
 		zfnc _7;
+		zfServices Services;
+	};
+	vt* vt;
+};
+
+
+struct zIGattDeviceService
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfnc _7;
 		zfnc _8;
+		zfUuid Uuid;
+	};
+	vt* vt;
+};
+
+
+struct zIVectorView
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfSize Size;
+		zfnc _8;
+		zfGetMany GetMany;
 	};
 	vt* vt;
 };
