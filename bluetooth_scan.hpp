@@ -12,28 +12,6 @@ namespace bt
 {
 
 
-class MCompleted
-{
-public:
-	std::mutex m_m;
-	std::condition_variable m_cv;
-	bool m_completed = false;
-
-	void signal() {
-		{
-			std::unique_lock l(m_m);
-			m_completed = true;
-		}
-		m_cv.notify_all();
-	}
-
-	void wait() {
-		std::unique_lock l(m_m);
-		m_cv.wait(l, [this]() { return m_completed == true; });
-	}
-};
-
-
 class ScannedDevice
 {
 public:

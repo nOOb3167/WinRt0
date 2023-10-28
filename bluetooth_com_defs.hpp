@@ -1,4 +1,5 @@
 #include <codecvt>
+#include <iostream>
 #include <locale>
 #include <stdexcept>
 #include <string>
@@ -23,6 +24,20 @@ static UUID MakeUUID(std::string s)
 	if (UuidFromStringA((unsigned char*)s.data(), &u) != RPC_S_OK)
 		throw std::runtime_error("UuidFromStringA");
 	return u;
+}
+
+
+static void PrintUUID(UUID uuid, std::string s)
+{
+	println(std::cout, "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}; // {}", uuid.Data1, uuid.Data2, uuid.Data3,
+		uuid.Data4[0], uuid.Data4[1], uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5], uuid.Data4[6], uuid.Data4[7], s);
+}
+
+
+static void _printuuid()
+{
+#define _PRINTUUID(x) PrintUUID(x, #x)
+	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult));
 }
 
 
@@ -96,7 +111,7 @@ UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129
 UUID uuidIVectorView__GattCharacteristic_star__ = { 3409621934, 46433, 20559, 168, 8, 89, 157, 236, 235, 45, 244 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*>)
 UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 198, 229, 105 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3)
 UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
-UUID uuidR = __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*>);
+UUID uuidIGattCharacteristicsResult = { 294949980, 45655, 20286, 157, 183, 246, 139, 201, 169, 174, 242 } ; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult)
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");

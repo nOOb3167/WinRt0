@@ -116,27 +116,36 @@ wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLE
 }
 
 
+wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID uuidAsyncOperation, UUID uuidAsyncOperationCompletedHandler, UUID uuidResult)
+{
+	CHK(ComIsA(uuidAsyncOperation, asyncOperation.Get()));
+	wrl::ComPtr<ComHandlerWaitable_IAsyncOperation> cb = new ComHandlerWaitable_IAsyncOperation(uuidAsyncOperation, uuidAsyncOperationCompletedHandler);
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
+	cb->wait();
+	wrl::ComPtr<IUnknown> result;
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &result));
+	CHK(ComIsA(uuidResult, result.Get()));
+	return result;
+}
+
+
 wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDeviceService)
 {
 	wrl::ComPtr<IUnknown> deviceService3;
+	wrl::ComPtr<IUnknown> asyncOperation;
+	wrl::ComPtr<IUnknown> gattCharacteristicResult;
+	int32_t status;
+
 	CHK(gattDeviceService->QueryInterface(uuidIGattDeviceService3, &deviceService3));
 
-	wrl::ComPtr<IUnknown> asyncOperation;
-
-	MCompleted completed;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__> cb = new ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(
-		[&completed]() {
-			completed.signal();
-		}
-	);
-
 	CHK(GetVt<zIGattDeviceService3>(deviceService3)->GetCharacteristicsWithCacheModeAsync(deviceService3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
-	CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, asyncOperation.Get()));
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
-	completed.wait();
-	wrl::ComPtr<IUnknown> gattCharacteristicResult;
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattCharacteristicResult));
-	int32_t status;
+
+	gattCharacteristicResult = operationwait(
+		asyncOperation,
+		uuidIAsyncOperation__GetCharacteristicsResult_star__,
+		uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__,
+		uuidIGattCharacteristicsResult);
+
 	CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicResult)->Status(gattCharacteristicResult.Get(), &status));
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
@@ -202,6 +211,7 @@ void stuff()
 
 int main(void)
 {
+	_printuuid();
 	stuff();
 
 	return 0;

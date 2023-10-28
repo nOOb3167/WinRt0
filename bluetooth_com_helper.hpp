@@ -1,6 +1,8 @@
 #include <codecvt>
+#include <condition_variable>
 #include <functional>
 #include <locale>
+#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -22,6 +24,28 @@ namespace bt {
 
 namespace wrl = Microsoft::WRL;
 namespace wrlw = Microsoft::WRL::Wrappers;
+
+
+class MCompleted
+{
+public:
+	std::mutex m_m;
+	std::condition_variable m_cv;
+	bool m_completed = false;
+
+	void signal() {
+		{
+			std::unique_lock l(m_m);
+			m_completed = true;
+		}
+		m_cv.notify_all();
+	}
+
+	void wait() {
+		std::unique_lock l(m_m);
+		m_cv.wait(l, [this]() { return m_completed == true; });
+	}
+};
 
 
 static void deleteHSTRING(HSTRING p)
@@ -178,6 +202,33 @@ public:
 		m_cb();
 
 		return S_OK;
+	}
+};
+
+
+class ComHandlerWaitable_IAsyncOperation : public ComBase
+{
+public:
+	typedef std::function<void()> cb_t;
+	cb_t m_cb;
+
+	MCompleted m_completed;
+	UUID m_uuidIAsyncOperation__XXXX__;
+	UUID m_uuidIAsyncOperationCompletedHandler__XXXX__;
+
+public:
+	ComHandlerWaitable_IAsyncOperation(UUID uuidIAsyncOperation__XXXX__, UUID uuidIAsyncOperationCompletedHandler__XXXX__) : ComBase({ uuidIAsyncOperationCompletedHandler__XXXX__ }), m_uuidIAsyncOperation__XXXX__(uuidIAsyncOperation__XXXX__) {}
+
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
+		CHK(ComIsA(m_uuidIAsyncOperation__XXXX__, op));
+
+		m_completed.signal();
+
+		return S_OK;
+	}
+
+	void wait() {
+		m_completed.wait();
 	}
 };
 
