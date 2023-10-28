@@ -65,6 +65,22 @@ enum class zGattCommunicationStatus : int32_t
 };
 
 
+enum class zGattCharacteristicProperties : int32_t
+{
+	None = 0x0,
+	Broadcast = 0x1,
+	Read = 0x2,
+	WriteWithoutResponse = 0x4,
+	Write = 0x8,
+	Notify = 0x10,
+	Indicate = 0x20,
+	AuthenticatedSignedWrites = 0x40,
+	ExtendedProperties = 0x80,
+	ReliableWrites = 0x100,
+	WritableAuxiliaries = 0x200
+};
+
+
 struct do_not_call_t
 {
 private:
@@ -93,6 +109,8 @@ typedef HRESULT (*zfGetMany)(IUnknown* thiz, uint32_t start_index, uint32_t size
 typedef HRESULT (*zfUuid)(IUnknown* thiz, UUID* value);
 typedef HRESULT (*zfGetCharacteristicsWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** out);
 typedef HRESULT (*zfCharacteristics)(IUnknown* thiz, IUnknown** out);
+typedef HRESULT (*zfCharacteristicProperties)(IUnknown* thiz, int32_t *value);
+
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = MakeUUID("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
@@ -267,6 +285,22 @@ struct zIGattDeviceService3
 		zfnc _10;
 		zfnc _11;
 		zfGetCharacteristicsWithCacheModeAsync GetCharacteristicsWithCacheModeAsync;
+	};
+	vt* vt;
+};
+
+
+struct zIGattCharacteristic
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfCharacteristicProperties CharacteristicProperties;
+		zfnc _8;
+		zfnc _9;
+		zfnc _10;
+		zfUuid Uuid;
 	};
 	vt* vt;
 };

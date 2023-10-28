@@ -70,6 +70,16 @@ HRESULT ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
 
 
 template<typename T>
+HRESULT ComIsAV(const UUID& uuid, const std::vector<T>& vec)
+{
+	for (auto&& v : vec)
+		if (FAILED(ComIsA(uuid, v)))
+			return E_FAIL;
+	return S_OK;
+}
+
+
+template<typename T>
 decltype(T::vt) GetVt(IUnknown* u) {
 	return ((T*)u)->vt;
 }

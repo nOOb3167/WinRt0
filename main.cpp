@@ -141,6 +141,79 @@ wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDevice
 }
 
 
+struct DataCharacteristic
+{
+	UUID m_uuid;
+	int32_t m_properties = (int32_t)zGattCharacteristicProperties::None;
+	bool m_read = false;
+	bool m_writ = false;
+};
+
+
+struct DataService
+{
+	UUID m_uuid;
+	std::vector<DataCharacteristic> m_characteristicVec;
+};
+
+
+struct DataDiscover
+{
+	std::vector<DataService> m_serviceVec;
+};
+
+
+DataDiscover serviceDiscover(const std::vector<wrl::ComPtr<IUnknown>> &gattDeviceServiceVec)
+{
+	CHK(ComIsAV(uuidIGattDeviceService, gattDeviceServiceVec));
+
+	DataDiscover dataDiscover;
+
+	for (auto& v : gattDeviceServiceVec) {
+		DataService dataService;
+
+		UUID serviceUUID;
+
+		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v.Get(), &serviceUUID));
+
+		wrl::ComPtr<IUnknown> gattCharacteristicsResult_ = gattCharacteristicsResult(v);
+		wrl::ComPtr<IUnknown> characteristics;
+		CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicsResult_)->Characteristics(gattCharacteristicsResult_.Get(), &characteristics));
+		CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
+		std::vector<wrl::ComPtr<IUnknown>> characteristicVec = VectorViewGetManyHelper(characteristics, uuidIGattCharacterictic);
+		CHK(ComIsAV(uuidIGattCharacterictic, characteristicVec));
+
+		for (auto& c : characteristicVec) {
+			DataCharacteristic dataCharacteristic;
+
+			UUID characteristicUUID;
+
+			CHK(GetVt<zIGattCharacteristic>(c)->Uuid(c.Get(), &characteristicUUID));
+
+			int32_t gattCharacteristicProperties;
+
+			CHK(GetVt<zIGattCharacteristic>(c)->CharacteristicProperties(c.Get(), &gattCharacteristicProperties));
+
+			bool read = gattCharacteristicProperties & (int32_t)zGattCharacteristicProperties::Read;
+			bool writ = gattCharacteristicProperties & (int32_t)zGattCharacteristicProperties::Write;
+
+			dataCharacteristic.m_uuid = characteristicUUID;
+			dataCharacteristic.m_properties = gattCharacteristicProperties;
+			dataCharacteristic.m_read = read;
+			dataCharacteristic.m_writ = writ;
+
+			dataService.m_characteristicVec.push_back(dataCharacteristic);
+		}
+
+		dataService.m_uuid = serviceUUID;
+
+		dataDiscover.m_serviceVec.push_back(dataService);
+	}
+
+	return dataDiscover;
+}
+
+
 void probe(const ScannedDevice& scannedDevice)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
@@ -165,10 +238,7 @@ void probe(const ScannedDevice& scannedDevice)
 		uuid.push_back(u);
 	}
 
-	wrl::ComPtr<IUnknown> gattCharacteristicsResult_ = gattCharacteristicsResult(serv.at(0));
-	wrl::ComPtr<IUnknown> characteristics;
-	CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicsResult_)->Characteristics(gattCharacteristicsResult_.Get(), &characteristics));
-	CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
+	DataDiscover dataDiscover = serviceDiscover(serv);
 }
 
 
