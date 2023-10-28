@@ -17,9 +17,12 @@
 
 #define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
+#include <algorithm>
+#include <iterator>
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <numeric>
 #include <locale>
 #include <codecvt>
 #include <format>
@@ -214,6 +217,23 @@ DataDiscover serviceDiscover(const std::vector<wrl::ComPtr<IUnknown>> &gattDevic
 }
 
 
+void serviceSelect(const DataDiscover &dataDiscover)
+{
+	std::vector<DataService> s;
+	std::copy_if(std::begin(dataDiscover.m_serviceVec), std::end(dataDiscover.m_serviceVec), std::back_inserter(s),
+		[](const DataService &a) {
+			return uint16FromBluetoothServiceUUID(a.m_uuid) == 0xFFFF;
+		});
+	std::vector<DataService> e;
+	std::copy_if(std::begin(s), std::end(s), std::back_inserter(e),
+		[](const DataService& a) {
+			bool read = std::accumulate(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), false, [](const bool& a, const DataCharacteristic& b) { return a || b.m_read; });
+			bool writ = std::accumulate(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), false, [](const bool& a, const DataCharacteristic& b) { return a || b.m_writ; });
+			return read && writ;
+		});
+}
+
+
 void probe(const ScannedDevice& scannedDevice)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
@@ -229,16 +249,9 @@ void probe(const ScannedDevice& scannedDevice)
 	CHK(ComIsA(uuidIVectorView__GattDeviceService_star__, services.Get()));
 
 	std::vector<wrl::ComPtr<IUnknown>> serv = VectorViewGetManyHelper(services, uuidIGattDeviceService);
-	std::vector<UUID> uuid = std::vector<UUID>(serv.size());
-
-	for (auto & v : serv) {
-		UUID u;
-		CHK(ComIsA(uuidIGattDeviceService, v));
-		CHK(GetVt<zIGattDeviceService>(v.Get())->Uuid(v.Get(), &u));
-		uuid.push_back(u);
-	}
 
 	DataDiscover dataDiscover = serviceDiscover(serv);
+	serviceSelect(dataDiscover);
 }
 
 
