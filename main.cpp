@@ -58,6 +58,19 @@ bool isStandardServiceUUID(UUID serviceUUID)
 }
 
 
+wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID uuidAsyncOperation, UUID uuidAsyncOperationCompletedHandler, UUID uuidResult)
+{
+	CHK(ComIsA(uuidAsyncOperation, asyncOperation.Get()));
+	wrl::ComPtr<ComHandlerWaitable_IAsyncOperation> cb = new ComHandlerWaitable_IAsyncOperation(uuidAsyncOperation, uuidAsyncOperationCompletedHandler);
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
+	cb->wait();
+	wrl::ComPtr<IUnknown> result;
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &result));
+	CHK(ComIsA(uuidResult, result.Get()));
+	return result;
+}
+
+
 void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown> *outBluetoothLEDevice, wrl::ComPtr<IUnknown>* outBluetoothLEDevice3)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDeviceStatics;
@@ -113,19 +126,6 @@ wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLE
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
 	return gattResult;
-}
-
-
-wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID uuidAsyncOperation, UUID uuidAsyncOperationCompletedHandler, UUID uuidResult)
-{
-	CHK(ComIsA(uuidAsyncOperation, asyncOperation.Get()));
-	wrl::ComPtr<ComHandlerWaitable_IAsyncOperation> cb = new ComHandlerWaitable_IAsyncOperation(uuidAsyncOperation, uuidAsyncOperationCompletedHandler);
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
-	cb->wait();
-	wrl::ComPtr<IUnknown> result;
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &result));
-	CHK(ComIsA(uuidResult, result.Get()));
-	return result;
 }
 
 
