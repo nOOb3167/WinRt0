@@ -29,6 +29,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <stdint.h>
 
 #include <roapi.h>
@@ -166,6 +167,21 @@ struct DataDiscover
 };
 
 
+struct SelectedService
+{
+	UUID m_service;
+	UUID m_characteristic_read;
+	UUID m_characteristic_writ;
+};
+
+
+struct CommService
+{
+	SelectedService m_selectedService;
+	wrl::ComPtr<IUnknown> m_gattDeviceService;
+};
+
+
 DataDiscover serviceDiscover(const std::vector<wrl::ComPtr<IUnknown>> &gattDeviceServiceVec)
 {
 	CHK(ComIsAV(uuidIGattDeviceService, gattDeviceServiceVec));
@@ -217,20 +233,47 @@ DataDiscover serviceDiscover(const std::vector<wrl::ComPtr<IUnknown>> &gattDevic
 }
 
 
-void serviceSelect(const DataDiscover &dataDiscover)
+SelectedService serviceSelect(const DataDiscover &dataDiscover)
 {
+	typedef std::vector<DataCharacteristic>::iterator i_t;
+
 	std::vector<DataService> s;
+	std::vector<SelectedService> e;
+	std::vector<SelectedService> f;
 	std::copy_if(std::begin(dataDiscover.m_serviceVec), std::end(dataDiscover.m_serviceVec), std::back_inserter(s),
 		[](const DataService &a) {
 			return uint16FromBluetoothServiceUUID(a.m_uuid) == 0xFFFF;
 		});
-	std::vector<DataService> e;
-	std::copy_if(std::begin(s), std::end(s), std::back_inserter(e),
-		[](const DataService& a) {
-			bool read = std::accumulate(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), false, [](const bool& a, const DataCharacteristic& b) { return a || b.m_read; });
-			bool writ = std::accumulate(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), false, [](const bool& a, const DataCharacteristic& b) { return a || b.m_writ; });
-			return read && writ;
+	std::transform(std::begin(s), std::end(s), std::back_inserter(e),
+		[](const DataService& a) -> SelectedService {
+			auto read = std::find_if(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), [](const DataCharacteristic& b) { return b.m_read; });
+			auto writ = std::find_if(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), [](const DataCharacteristic& b) { return b.m_writ; });
+			return {
+				.m_service = a.m_uuid,
+				.m_characteristic_read = read != std::end(a.m_characteristicVec) ? read->m_uuid : uuidSentinel,
+				.m_characteristic_writ = writ != std::end(a.m_characteristicVec) ? writ->m_uuid : uuidSentinel };
 		});
+	std::copy_if(std::begin(e), std::end(e), std::back_inserter(f),
+		[](const SelectedService& a) {
+			return a.m_characteristic_read != uuidSentinel && a.m_characteristic_writ != uuidSentinel;
+		});
+	CHK(f.size() == 1 ? S_OK : E_FAIL);
+
+	return f.at(0);
+}
+
+
+CommService CommServiceSelect(const SelectedService& selectedService, const std::vector<wrl::ComPtr<IUnknown>>& serv)
+{
+	auto read = std::find_if(std::begin(serv), std::end(serv),
+		[&selectedService](const wrl::ComPtr<IUnknown>& s) {
+			UUID u;
+			CHK(ComIsA(uuidIGattDeviceService, s.Get()));
+			CHK(GetVt<zIGattDeviceService>(s)->Uuid(s.Get(), &u));
+			return selectedService.m_service == u;
+		});
+	CHK(read != std::end(serv) ? S_OK : E_FAIL);
+	return { .m_selectedService = selectedService, .m_gattDeviceService = *read };
 }
 
 
@@ -251,7 +294,8 @@ void probe(const ScannedDevice& scannedDevice)
 	std::vector<wrl::ComPtr<IUnknown>> serv = VectorViewGetManyHelper(services, uuidIGattDeviceService);
 
 	DataDiscover dataDiscover = serviceDiscover(serv);
-	serviceSelect(dataDiscover);
+	SelectedService selectedService = serviceSelect(dataDiscover);
+	CommService commServiceSelect = CommServiceSelect(selectedService, serv);
 }
 
 

@@ -137,6 +137,8 @@ UUID uuidIGattDeviceServicesResult = { 387830766, 365, 16797, 131, 138, 87, 108,
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
 
+UUID uuidSentinel = MakeUUID("FFFFFFFF-FFFF-FFFF-FFFF-FFFFFFFFFFFF");
+
 
 struct vt_iunknown
 {
