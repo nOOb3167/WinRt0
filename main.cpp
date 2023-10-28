@@ -74,23 +74,20 @@ wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID u
 void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown> *outBluetoothLEDevice, wrl::ComPtr<IUnknown>* outBluetoothLEDevice3)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDeviceStatics;
+	wrl::ComPtr<IUnknown> asyncOperation;
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
 	wrl::ComPtr<IUnknown> bluetoothLEDevice3;
 
-	wrl::ComPtr<IUnknown> asyncOperation;
-
-	MCompleted completed;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__> cb2 = new ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__(
-		[&completed]() {
-			completed.signal();
-		}
-	);
-
 	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice").Get(), uuidIBluetoothLEDeviceStatics, &bluetoothLEDeviceStatics));
+	
 	CHK(GetVt<zIBluetoothLEDeviceStatics>(bluetoothLEDeviceStatics)->FromBluetoothAddressAsync(bluetoothLEDeviceStatics.Get(), bluetoothAddress, &asyncOperation));
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb2.Get()));
-	completed.wait();
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &bluetoothLEDevice));
+
+	bluetoothLEDevice = operationwait(
+		asyncOperation,
+		uuidIAsyncOperation__BluetoothLEDevice__,
+		uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__,
+		uuidIBluetoothLEDevice);
+
 	CHK(bluetoothLEDevice->QueryInterface(uuidIBluetoothLEDevice3, &bluetoothLEDevice3));
 
 	*outBluetoothLEDevice = bluetoothLEDevice;
@@ -100,32 +97,23 @@ void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown>
 
 wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLEDevice3)
 {
-	wrl::ComPtr<IUnknown> gattResult;
-	int32_t status;
 
 	wrl::ComPtr<IUnknown> asyncOperation;
-
-	MCompleted completed;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__> cb3 = new ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__(
-		[&completed]() {
-			completed.signal();
-		}
-	);
+	wrl::ComPtr<IUnknown> result;
+	int32_t status;
 
 	CHK(GetVt<zIBluetoothLEDevice3>(bluetoothLEDevice3)->GetGattServicesWithCacheModeAsync(bluetoothLEDevice3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
 
-	CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, asyncOperation));
+	result = operationwait(
+		asyncOperation,
+		uuidIAsyncOperation__GattDeviceServicesResult_star__,
+		uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__,
+		uuidIGattDeviceServicesResult);
 
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb3.Get()));
-
-	completed.wait();
-
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattResult));
-
-	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Status(gattResult.Get(), &status));
+	CHK(GetVt<zIGattDeviceServicesResult>(result)->Status(result.Get(), &status));
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
-	return gattResult;
+	return result;
 }
 
 
@@ -133,23 +121,23 @@ wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDevice
 {
 	wrl::ComPtr<IUnknown> deviceService3;
 	wrl::ComPtr<IUnknown> asyncOperation;
-	wrl::ComPtr<IUnknown> gattCharacteristicResult;
+	wrl::ComPtr<IUnknown> result;
 	int32_t status;
 
 	CHK(gattDeviceService->QueryInterface(uuidIGattDeviceService3, &deviceService3));
 
 	CHK(GetVt<zIGattDeviceService3>(deviceService3)->GetCharacteristicsWithCacheModeAsync(deviceService3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
 
-	gattCharacteristicResult = operationwait(
+	result = operationwait(
 		asyncOperation,
 		uuidIAsyncOperation__GetCharacteristicsResult_star__,
 		uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__,
 		uuidIGattCharacteristicsResult);
 
-	CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicResult)->Status(gattCharacteristicResult.Get(), &status));
+	CHK(GetVt<zIGattCharacteristicsResult>(result)->Status(result.Get(), &status));
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
-	return gattCharacteristicResult;
+	return result;
 }
 
 

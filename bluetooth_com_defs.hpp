@@ -37,7 +37,7 @@ static void PrintUUID(UUID uuid, std::string s)
 static void _printuuid()
 {
 #define _PRINTUUID(x) PrintUUID(x, #x)
-	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult));
+	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice));
 }
 
 
@@ -99,6 +99,7 @@ UUID uuidIBluetoothLEAdvertisementWatcher = MakeUUID("A6AC336F-F3D3-4297-8D6C-C8
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = MakeUUID("27987DDF-E596-41BE-8D43-9E6731D4A913");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs2 = MakeUUID("12D9C87B-0399-5F0E-A348-53B02B6B162E");
 UUID uuidIBluetoothLEDeviceStatics = MakeUUID("C8CF1A19-F0B6-4BF0-8689-41303DE2D9F4");
+UUID uuidIBluetoothLEDevice = { 3052285819, 19160, 17986, 172, 72, 128, 160, 181, 0, 232, 135 }; // __uuidof(ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice)
 UUID uuidIBluetoothLEDevice3 = MakeUUID("AEE9E493-44AC-40DC-AF33-B2C13C01CA46");
 UUID uuidIAsyncOperation__BluetoothLEDevice__ = { 929013095, 29858, 24465, 161, 29, 22, 144, 147, 113, 141, 65 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
 UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
@@ -112,6 +113,7 @@ UUID uuidIVectorView__GattCharacteristic_star__ = { 3409621934, 46433, 20559, 16
 UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 198, 229, 105 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3)
 UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
 UUID uuidIGattCharacteristicsResult = { 294949980, 45655, 20286, 157, 183, 246, 139, 201, 169, 174, 242 } ; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult)
+UUID uuidIGattDeviceServicesResult = { 387830766, 365, 16797, 131, 138, 87, 108, 244, 117, 163, 216 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult)
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");

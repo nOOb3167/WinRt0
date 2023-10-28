@@ -149,63 +149,6 @@ public:
 };
 
 
-class ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__ : public ComBase
-{
-public:
-	typedef std::function<void()> cb_t;
-	cb_t m_cb;
-
-public:
-	ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__(cb_t cb) : ComBase({ uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ }), m_cb(cb) {}
-
-	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
-		CHK(ComIsA(uuidIAsyncOperation__BluetoothLEDevice__, op));
-
-		m_cb();
-
-		return S_OK;
-	}
-};
-
-
-class ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ : public ComBase
-{
-public:
-	typedef std::function<void()> cb_t;
-	cb_t m_cb;
-
-public:
-	ComHandler_IAsyncOperationCompletedHandler__GattDeviceServicesResult_star__(cb_t cb) : ComBase({ uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ }), m_cb(cb) {}
-
-	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
-		CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, op));
-
-		m_cb();
-
-		return S_OK;
-	}
-};
-
-
-class ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ : public ComBase
-{
-public:
-	typedef std::function<void()> cb_t;
-	cb_t m_cb;
-
-public:
-	ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(cb_t cb) : ComBase({ uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ }), m_cb(cb) {}
-
-	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
-		CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, op));
-
-		m_cb();
-
-		return S_OK;
-	}
-};
-
-
 class ComHandlerWaitable_IAsyncOperation : public ComBase
 {
 public:
@@ -214,7 +157,6 @@ public:
 
 	MCompleted m_completed;
 	UUID m_uuidIAsyncOperation__XXXX__;
-	UUID m_uuidIAsyncOperationCompletedHandler__XXXX__;
 
 public:
 	ComHandlerWaitable_IAsyncOperation(UUID uuidIAsyncOperation__XXXX__, UUID uuidIAsyncOperationCompletedHandler__XXXX__) : ComBase({ uuidIAsyncOperationCompletedHandler__XXXX__ }), m_uuidIAsyncOperation__XXXX__(uuidIAsyncOperation__XXXX__) {}
