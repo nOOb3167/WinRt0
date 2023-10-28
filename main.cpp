@@ -147,12 +147,6 @@ void probe(const ScannedDevice& scannedDevice)
 	wrl::ComPtr<IUnknown> bluetoothLEDevice3;
 
 	wrl::ComPtr<IUnknown> services;
-	uint32_t size_serv = 0;
-	uint32_t ncopied_serv = 0;
-	std::vector<IUnknown*> serv;
-	std::vector<UUID> uuid;
-
-	size_t FIXME_VERY_BIG = 256;
 
 	deviceFromBluetoothAddress(scannedDevice.m_bluetoothAddress, &bluetoothLEDevice, &bluetoothLEDevice3);
 
@@ -161,18 +155,13 @@ void probe(const ScannedDevice& scannedDevice)
 	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Services(gattResult.Get(), &services));
 	CHK(ComIsA(uuidIVectorView__GattDeviceService_star__, services.Get()));
 
-	CHK(GetVt<zIVectorView>(services)->Size(services.Get(), &size_serv));
-	CHK(size_serv < FIXME_VERY_BIG ? S_OK : E_FAIL);
-
-	serv = std::vector<IUnknown*>(size_serv);
-	uuid = std::vector<UUID>(size_serv);
-
-	CHK(GetVt<zIVectorView>(services)->GetMany(services.Get(), 0, size_serv, serv.data(), &ncopied_serv));
+	std::vector<wrl::ComPtr<IUnknown>> serv = VectorViewGetManyHelper(services, uuidIGattDeviceService);
+	std::vector<UUID> uuid = std::vector<UUID>(serv.size());
 
 	for (auto & v : serv) {
 		UUID u;
-		CHK(ComIsA(uuidIGattDeviceService3, v));  // FIXME: should be uuidIGattDeviceService
-		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v, &u));
+		CHK(ComIsA(uuidIGattDeviceService, v));
+		CHK(GetVt<zIGattDeviceService>(v.Get())->Uuid(v.Get(), &u));
 		uuid.push_back(u);
 	}
 

@@ -81,6 +81,33 @@ decltype(T::vt) GetVt(wrl::ComPtr<U> u) {
 }
 
 
+std::vector<wrl::ComPtr<IUnknown>> VectorViewGetManyHelper(wrl::ComPtr<IUnknown> vectorView, UUID uuidOfData)
+{
+	uint32_t size;
+	uint32_t ncopied;
+	std::vector<IUnknown*> vect;
+	std::vector<wrl::ComPtr<IUnknown>> retn;
+
+	size_t FIXME_VERY_BIG = 256;
+
+	CHK(GetVt<zIVectorView>(vectorView)->Size(vectorView.Get(), &size));
+	CHK(size < FIXME_VERY_BIG ? S_OK : E_FAIL);
+
+	vect.resize(size);
+
+	CHK(GetVt<zIVectorView>(vectorView)->GetMany(vectorView.Get(), 0, size, vect.data(), &ncopied));
+	vect.resize(ncopied);
+
+	for (const auto& v : vect)
+		retn.emplace_back(v);
+
+	for (const auto& v : vect)
+		CHK(ComIsA(uuidOfData, v));
+
+	return retn;
+}
+
+
 class ComBase : public IUnknown
 {
 protected:

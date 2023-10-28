@@ -37,7 +37,7 @@ static void PrintUUID(UUID uuid, std::string s)
 static void _printuuid()
 {
 #define _PRINTUUID(x) PrintUUID(x, #x)
-	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice));
+	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService));
 }
 
 
@@ -110,6 +110,7 @@ UUID uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ = { 36
 UUID uuidIBluetoothLEAdvertisement = { 107983543, 13265, 20093, 131, 103, 207, 129, 208, 247, 150, 83 }; // __uuidof(ABI::Windows::Devices::Bluetooth::Advertisement::IBluetoothLEAdvertisement)
 UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129, 209, 41, 103, 105, 34, 122, 8 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceService*>)
 UUID uuidIVectorView__GattCharacteristic_star__ = { 3409621934, 46433, 20559, 168, 8, 89, 157, 236, 235, 45, 244 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*>)
+UUID uuidIGattDeviceService = { 2893773829, 45884, 18383, 153, 15, 107, 143, 85, 119, 223, 113 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService)
 UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 198, 229, 105 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3)
 UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
 UUID uuidIGattCharacteristicsResult = { 294949980, 45655, 20286, 157, 183, 246, 139, 201, 169, 174, 242 } ; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult)
