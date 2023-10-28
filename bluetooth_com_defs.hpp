@@ -77,7 +77,7 @@ typedef HRESULT (*zfSize)(IUnknown* thiz, uint32_t* value);
 typedef HRESULT (*zfGetMany)(IUnknown* thiz, uint32_t start_index, uint32_t size_o_items, IUnknown** o_items, uint32_t* o_ncopied); // FIXME: this is for returning IUnknown - o_items will differ for other types
 typedef HRESULT (*zfUuid)(IUnknown* thiz, UUID* value);
 typedef HRESULT (*zfGetCharacteristicsWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** out);
-
+typedef HRESULT (*zfCharacteristics)(IUnknown* thiz, IUnknown** out);
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = MakeUUID("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
@@ -93,9 +93,10 @@ UUID uuidIAsyncOperation__GetCharacteristicsResult_star__ = { 158472522, 44060, 
 UUID uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ = { 3600897141, 7794, 23638, 152, 232, 136, 244, 188, 62, 3, 19 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristicsResult *>)
 UUID uuidIBluetoothLEAdvertisement = { 107983543, 13265, 20093, 131, 103, 207, 129, 208, 247, 150, 83 }; // __uuidof(ABI::Windows::Devices::Bluetooth::Advertisement::IBluetoothLEAdvertisement)
 UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129, 209, 41, 103, 105, 34, 122, 8 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceService*>)
+UUID uuidIVectorView__GattCharacteristic_star__ = { 3409621934, 46433, 20559, 168, 8, 89, 157, 236, 235, 45, 244 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*>)
 UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 198, 229, 105 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3)
 UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
-UUID uuidR = __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic);
+UUID uuidR = __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*>);
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
@@ -204,6 +205,19 @@ struct zIGattDeviceServicesResult
 		zfStatus Status;
 		zfnc _7;
 		zfServices Services;
+	};
+	vt* vt;
+};
+
+
+struct zIGattCharacteristicsResult
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfStatus Status;
+		zfnc _7;
+		zfCharacteristics Characteristics;
 	};
 	vt* vt;
 };

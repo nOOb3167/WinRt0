@@ -30,18 +30,18 @@ static void deleteHSTRING(HSTRING p)
 }
 
 
-static bool ComIsA(const UUID &uuid, IUnknown *obj)
+static HRESULT ComIsA(const UUID &uuid, IUnknown *obj)
 {
 	wrl::ComPtr<IUnknown> tmp;
-	return FAILED(obj->QueryInterface(uuid, &tmp));
+	return obj->QueryInterface(uuid, &tmp);
 }
 
 
 template<typename T>
-bool ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
+HRESULT ComIsA(const UUID &uuid, const wrl::ComPtr<T> &obj)
 {
 	wrl::ComPtr<IUnknown> tmp;
-	return FAILED(obj->QueryInterface(uuid, &tmp));
+	return obj->QueryInterface(uuid, &tmp);
 }
 
 

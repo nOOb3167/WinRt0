@@ -116,6 +116,34 @@ wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLE
 }
 
 
+wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDeviceService)
+{
+	wrl::ComPtr<IUnknown> deviceService3;
+	CHK(gattDeviceService->QueryInterface(uuidIGattDeviceService3, &deviceService3));
+
+	wrl::ComPtr<IUnknown> asyncOperation;
+
+	MCompleted completed;
+	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__> cb = new ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(
+		[&completed]() {
+			completed.signal();
+		}
+	);
+
+	CHK(GetVt<zIGattDeviceService3>(deviceService3)->GetCharacteristicsWithCacheModeAsync(deviceService3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
+	CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, asyncOperation.Get()));
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
+	completed.wait();
+	wrl::ComPtr<IUnknown> gattCharacteristicResult;
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattCharacteristicResult));
+	int32_t status;
+	CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicResult)->Status(gattCharacteristicResult.Get(), &status));
+	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
+
+	return gattCharacteristicResult;
+}
+
+
 void probe(const ScannedDevice& scannedDevice)
 {
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
@@ -146,29 +174,15 @@ void probe(const ScannedDevice& scannedDevice)
 
 	for (auto & v : serv) {
 		UUID u;
+		CHK(ComIsA(uuidIGattDeviceService3, v));  // FIXME: should be uuidIGattDeviceService
 		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v, &u));
 		uuid.push_back(u);
 	}
 
-	wrl::ComPtr<IUnknown> deviceService3;
-	CHK(serv.at(0)->QueryInterface(uuidIGattDeviceService3, &deviceService3));
-
-	wrl::ComPtr<IUnknown> asyncOperation;
-
-	MCompleted completed;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__> cb = new ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(
-		[&completed]() {
-			completed.signal();
-		}
-	);
-
-	CHK(GetVt<zIGattDeviceService3>(deviceService3)->GetCharacteristicsWithCacheModeAsync(deviceService3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
-	CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, asyncOperation.Get()));
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
-	completed.wait();
-	wrl::ComPtr<IUnknown> gattCharacteristic;
-	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattCharacteristic));
-	CHK(ComIsA(uuidIGattCharacterictic, gattCharacteristic.Get()));
+	wrl::ComPtr<IUnknown> gattCharacteristicsResult_ = gattCharacteristicsResult(serv.at(0));
+	wrl::ComPtr<IUnknown> characteristics;
+	CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicsResult_)->Characteristics(gattCharacteristicsResult_.Get(), &characteristics));
+	CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
 }
 
 
