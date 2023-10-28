@@ -48,7 +48,7 @@ uint16_t uint16FromBluetoothServiceUUID(UUID serviceUUID)
 	// check that UUID is of the form 0000XXXX-0000-1000-8000-00805F9B34FB and return the XXXX returning FFFF otherwise
 	if (serviceUUID.Data1 & 0xFFFF0000 || serviceUUID.Data2 != uuidBluetoothBaseUUID.Data2 || serviceUUID.Data3 != uuidBluetoothBaseUUID.Data3 || memcmp(serviceUUID.Data4, uuidBluetoothBaseUUID.Data4, 8) != 0)
 		return 0xFFFF;
-	return serviceUUID.Data1;
+	return (uint16_t)serviceUUID.Data1;
 }
 
 
@@ -131,13 +131,6 @@ void probe(const ScannedDevice& scannedDevice)
 
 	deviceFromBluetoothAddress(scannedDevice.m_bluetoothAddress, &bluetoothLEDevice, &bluetoothLEDevice3);
 
-	MCompleted cb2mcompleted;
-	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__> cb2 = new ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__(
-		[&cb2mcompleted]() {
-			cb2mcompleted.signal();
-		}
-	);
-
 	wrl::ComPtr<IUnknown> gattResult = gattDeviceServicesResult(bluetoothLEDevice3);
 
 	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Services(gattResult.Get(), &services));
@@ -156,6 +149,26 @@ void probe(const ScannedDevice& scannedDevice)
 		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v, &u));
 		uuid.push_back(u);
 	}
+
+	wrl::ComPtr<IUnknown> deviceService3;
+	CHK(serv.at(0)->QueryInterface(uuidIGattDeviceService3, &deviceService3));
+
+	wrl::ComPtr<IUnknown> asyncOperation;
+
+	MCompleted completed;
+	wrl::ComPtr<ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__> cb = new ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(
+		[&completed]() {
+			completed.signal();
+		}
+	);
+
+	CHK(GetVt<zIGattDeviceService3>(deviceService3)->GetCharacteristicsWithCacheModeAsync(deviceService3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
+	CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, asyncOperation.Get()));
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
+	completed.wait();
+	wrl::ComPtr<IUnknown> gattCharacteristic;
+	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &gattCharacteristic));
+	CHK(ComIsA(uuidIGattCharacterictic, gattCharacteristic.Get()));
 }
 
 

@@ -135,8 +135,6 @@ public:
 	ComHandler_IAsyncOperationCompletedHandler__BluetoothLEDevice__(cb_t cb) : ComBase({ uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ }), m_cb(cb) {}
 
 	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
-		wrl::ComPtr<IUnknown> ledev;
-
 		CHK(ComIsA(uuidIAsyncOperation__BluetoothLEDevice__, op));
 
 		m_cb();
@@ -157,6 +155,25 @@ public:
 
 	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
 		CHK(ComIsA(uuidIAsyncOperation__GattDeviceServicesResult_star__, op));
+
+		m_cb();
+
+		return S_OK;
+	}
+};
+
+
+class ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ : public ComBase
+{
+public:
+	typedef std::function<void()> cb_t;
+	cb_t m_cb;
+
+public:
+	ComHandler_IAsyncOperationCompletedHandler__GetCharacteristicsResult_star__(cb_t cb) : ComBase({ uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ }), m_cb(cb) {}
+
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IInspectable *op) {
+		CHK(ComIsA(uuidIAsyncOperation__GetCharacteristicsResult_star__, op));
 
 		m_cb();
 

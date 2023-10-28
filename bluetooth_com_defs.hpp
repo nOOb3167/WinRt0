@@ -9,6 +9,10 @@
 #include <wrl.h>
 
 
+#include <windows.foundation.collections.h>
+#include <windows.devices.bluetooth.genericattributeprofile.h>
+
+
 namespace bt
 {
 
@@ -71,7 +75,8 @@ typedef HRESULT (*zfStatus)(IUnknown* thiz, int32_t *out);
 typedef HRESULT (*zfServices)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfSize)(IUnknown* thiz, uint32_t* value);
 typedef HRESULT (*zfGetMany)(IUnknown* thiz, uint32_t start_index, uint32_t size_o_items, IUnknown** o_items, uint32_t* o_ncopied); // FIXME: this is for returning IUnknown - o_items will differ for other types
-typedef HRESULT(*zfUuid)(IUnknown* thiz, UUID* value);
+typedef HRESULT (*zfUuid)(IUnknown* thiz, UUID* value);
+typedef HRESULT (*zfGetCharacteristicsWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** out);
 
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
@@ -84,12 +89,16 @@ UUID uuidIAsyncOperation__BluetoothLEDevice__ = { 929013095, 29858, 24465, 161, 
 UUID uuidIAsyncOperationCompletedHandler__BluetoothLEDevice__ = { 2438379423, 50506, 21111, 143, 139, 210, 204, 67, 199, 224, 4 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::BluetoothLEDevice*>)
 UUID uuidIAsyncOperation__GattDeviceServicesResult_star__ = { 3888539638, 59508, 20495, 134, 255, 118, 12, 166, 240, 122, 88 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
 UUID uuidIAsyncOperationCompletedHandler__GattDeviceServicesResult_star__ = { 1957365906, 42545, 23916, 177, 180, 189, 46, 26, 116, 26, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult*>)
+UUID uuidIAsyncOperation__GetCharacteristicsResult_star__ = { 158472522, 44060, 21814, 152, 134, 39, 229, 138, 24, 242, 115 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristicsResult *>)
+UUID uuidIAsyncOperationCompletedHandler__GetCharacteristicsResult_star__ = { 3600897141, 7794, 23638, 152, 232, 136, 244, 188, 62, 3, 19 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristicsResult *>)
 UUID uuidIBluetoothLEAdvertisement = { 107983543, 13265, 20093, 131, 103, 207, 129, 208, 247, 150, 83 }; // __uuidof(ABI::Windows::Devices::Bluetooth::Advertisement::IBluetoothLEAdvertisement)
 UUID uuidIVectorView__GattDeviceService_star__ = { 2089713629, 41377, 21130, 129, 209, 41, 103, 105, 34, 122, 8 }; // __uuidof(ABI::Windows::Foundation::Collections::IVectorView<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceService*>)
-
+UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 198, 229, 105 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService3)
+UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
+UUID uuidR = __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic);
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
-UUID uuidBluetoothBaseUUID = MakeUUID("{00000000-0000-1000-8000-00805F9B34FB}");
+UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
 
 
 struct vt_iunknown
@@ -209,6 +218,23 @@ struct zIGattDeviceService
 		zfnc _7;
 		zfnc _8;
 		zfUuid Uuid;
+	};
+	vt* vt;
+};
+
+
+struct zIGattDeviceService3
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfnc _7;
+		zfnc _8;
+		zfnc _9;
+		zfnc _10;
+		zfnc _11;
+		zfGetCharacteristicsWithCacheModeAsync GetCharacteristicsWithCacheModeAsync;
 	};
 	vt* vt;
 };
