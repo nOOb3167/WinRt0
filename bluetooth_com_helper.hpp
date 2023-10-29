@@ -186,6 +186,27 @@ public:
 };
 
 
+class ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs : public ComBase
+{
+public:
+	typedef std::function<void()> cb_t;
+	cb_t m_cb;
+
+public:
+	ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs(cb_t cb) : ComBase({ uuidITypedEventHandler__GattCharacteristic_star__GattValueChangedEventArgs_star__ }), m_cb(cb) {}
+
+	virtual HRESULT STDMETHODCALLTYPE Invoke(IUnknown *characteristic, IInspectable *args)
+	{
+		CHK(ComIsA(uuidIGattCharacterictic, characteristic));
+		CHK(ComIsA(uuidIGattValueChangedEventArgs, args));
+
+		m_cb();
+
+		return S_OK;
+	}
+};
+
+
 class ComHandlerWaitable_IAsyncOperation : public ComBase
 {
 public:

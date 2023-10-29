@@ -186,6 +186,35 @@ void writeCharacteristic(wrl::ComPtr<IUnknown> characteristic, std::string data)
 }
 
 
+void subscribeNotifyCharacteristic(wrl::ComPtr<IUnknown> characteristic)
+{
+	CHK(ComIsA(uuidIGattCharacterictic, characteristic));
+
+	wrl::ComPtr<IUnknown> asyncOperation;
+	wrl::ComPtr<IUnknown> result;
+	EventRegistrationToken token_unused;
+
+	CHK(GetVt<zIGattCharacteristic>(characteristic)->WriteClientCharacteristicConfigurationDescriptorAsync(characteristic.Get(), (int32_t)zGattClientCharacteristicConfigurationDescriptorValue::Notify, &asyncOperation));
+
+	result = operationwait(
+		asyncOperation,
+		uuidIASyncOperation__GattCommunicationStatus__,
+		uuidIASyncOperationCompletedHandler__GattCommunicationStatus__,
+		uuidSentinel,
+		true);
+
+	CHK(result == nullptr ? S_OK : E_FAIL);
+
+	wrl::ComPtr<ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs> cb = new ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs(
+		[]() {
+			println(cout, "response");
+		}
+	);
+
+	CHK(GetVt<zIGattCharacteristic>(characteristic)->Add_ValueChanged(characteristic.Get(), cb.Get(), &token_unused));
+}
+
+
 struct DataCharacteristic
 {
 	wrl::ComPtr<IUnknown> m_ptr;
@@ -296,7 +325,9 @@ void probe(const ScannedDevice& scannedDevice)
 	DataDevice dataDiscover = deviceDiscover(bluetoothLEDevice3);
 	SelectedService selectedService = serviceSelect(dataDiscover);
 
-	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "test");
+	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
+	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00");
+	Sleep(5000);
 }
 
 
