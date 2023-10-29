@@ -99,12 +99,13 @@ void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown>
 }
 
 
-wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLEDevice3)
+std::vector<wrl::ComPtr<IUnknown>> getDeviceServices(wrl::ComPtr<IUnknown> bluetoothLEDevice3)
 {
 
 	wrl::ComPtr<IUnknown> asyncOperation;
 	wrl::ComPtr<IUnknown> result;
 	int32_t status;
+	wrl::ComPtr<IUnknown> services;
 
 	CHK(GetVt<zIBluetoothLEDevice3>(bluetoothLEDevice3)->GetGattServicesWithCacheModeAsync(bluetoothLEDevice3.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
 
@@ -117,16 +118,20 @@ wrl::ComPtr<IUnknown> gattDeviceServicesResult(wrl::ComPtr<IUnknown> bluetoothLE
 	CHK(GetVt<zIGattDeviceServicesResult>(result)->Status(result.Get(), &status));
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
-	return result;
+	CHK(GetVt<zIGattDeviceServicesResult>(result)->Services(result.Get(), &services));
+	CHK(ComIsA(uuidIVectorView__GattDeviceService_star__, services.Get()));
+
+	return VectorViewGetManyHelper(services, uuidIGattDeviceService);;
 }
 
 
-wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDeviceService)
+std::vector<wrl::ComPtr<IUnknown>> getServiceCharacteristics(wrl::ComPtr<IUnknown> gattDeviceService)
 {
 	wrl::ComPtr<IUnknown> deviceService3;
 	wrl::ComPtr<IUnknown> asyncOperation;
 	wrl::ComPtr<IUnknown> result;
 	int32_t status;
+	wrl::ComPtr<IUnknown> characteristics;
 
 	CHK(gattDeviceService->QueryInterface(uuidIGattDeviceService3, &deviceService3));
 
@@ -141,13 +146,16 @@ wrl::ComPtr<IUnknown> gattCharacteristicsResult(wrl::ComPtr<IUnknown> gattDevice
 	CHK(GetVt<zIGattCharacteristicsResult>(result)->Status(result.Get(), &status));
 	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
 
-	return result;
+	CHK(GetVt<zIGattCharacteristicsResult>(result)->Characteristics(result.Get(), &characteristics));
+	CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
+
+	return VectorViewGetManyHelper(characteristics, uuidIGattCharacterictic);
 }
 
 
 struct DataCharacteristic
 {
-	UUID m_uuid;
+	wrl::ComPtr<IUnknown> m_ptr;
 	int32_t m_properties = (int32_t)zGattCharacteristicProperties::None;
 	bool m_read = false;
 	bool m_writ = false;
@@ -156,124 +164,90 @@ struct DataCharacteristic
 
 struct DataService
 {
-	UUID m_uuid;
+	wrl::ComPtr<IUnknown>           m_ptr;
 	std::vector<DataCharacteristic> m_characteristicVec;
+	UUID                            m_UUID;
 };
 
 
-struct DataDiscover
+struct DataDevice
 {
+	wrl::ComPtr<IUnknown>    m_ptr;
 	std::vector<DataService> m_serviceVec;
 };
 
 
 struct SelectedService
 {
-	UUID m_service;
-	UUID m_characteristic_read;
-	UUID m_characteristic_writ;
+	DataDevice  m_device;
+	DataService m_service;
+	DataCharacteristic m_characteristic_read;
+	DataCharacteristic m_characteristic_writ;
 };
 
 
-struct CommService
+DataDevice deviceDiscover(wrl::ComPtr<IUnknown> bluetoothLEDevice3)
 {
-	SelectedService m_selectedService;
-	wrl::ComPtr<IUnknown> m_gattDeviceService;
-};
+	DataDevice dataDevice;
 
+	// fill ptr
 
-DataDiscover serviceDiscover(const std::vector<wrl::ComPtr<IUnknown>> &gattDeviceServiceVec)
-{
-	CHK(ComIsAV(uuidIGattDeviceService, gattDeviceServiceVec));
-
-	DataDiscover dataDiscover;
-
-	for (auto& v : gattDeviceServiceVec) {
-		DataService dataService;
-
-		UUID serviceUUID;
-
-		CHK(GetVt<zIGattDeviceService>(v)->Uuid(v.Get(), &serviceUUID));
-
-		wrl::ComPtr<IUnknown> gattCharacteristicsResult_ = gattCharacteristicsResult(v);
-		wrl::ComPtr<IUnknown> characteristics;
-		CHK(GetVt<zIGattCharacteristicsResult>(gattCharacteristicsResult_)->Characteristics(gattCharacteristicsResult_.Get(), &characteristics));
-		CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
-		std::vector<wrl::ComPtr<IUnknown>> characteristicVec = VectorViewGetManyHelper(characteristics, uuidIGattCharacterictic);
-		CHK(ComIsAV(uuidIGattCharacterictic, characteristicVec));
-
-		for (auto& c : characteristicVec) {
-			DataCharacteristic dataCharacteristic;
-
-			UUID characteristicUUID;
-
-			CHK(GetVt<zIGattCharacteristic>(c)->Uuid(c.Get(), &characteristicUUID));
-
-			int32_t gattCharacteristicProperties;
-
-			CHK(GetVt<zIGattCharacteristic>(c)->CharacteristicProperties(c.Get(), &gattCharacteristicProperties));
-
-			bool read = gattCharacteristicProperties & (int32_t)zGattCharacteristicProperties::Read;
-			bool writ = gattCharacteristicProperties & (int32_t)zGattCharacteristicProperties::Write;
-
-			dataCharacteristic.m_uuid = characteristicUUID;
-			dataCharacteristic.m_properties = gattCharacteristicProperties;
-			dataCharacteristic.m_read = read;
-			dataCharacteristic.m_writ = writ;
-
-			dataService.m_characteristicVec.push_back(dataCharacteristic);
-		}
-
-		dataService.m_uuid = serviceUUID;
-
-		dataDiscover.m_serviceVec.push_back(dataService);
+	for (wrl::ComPtr<IUnknown>& service : getDeviceServices(bluetoothLEDevice3)) {
+		std::vector<wrl::ComPtr<IUnknown>> c = getServiceCharacteristics(service);
+		std::vector<DataCharacteristic> c2;
+		std::transform(std::begin(c), std::end(c), std::back_inserter(c2), [](const wrl::ComPtr<IUnknown>& a) { return DataCharacteristic { .m_ptr = a }; });
+		dataDevice.m_serviceVec.push_back(DataService { .m_ptr = service, .m_characteristicVec = c2 });
 	}
 
-	return dataDiscover;
+	// fill rest
+
+	for (DataService& service : dataDevice.m_serviceVec) {
+
+		CHK(GetVt<zIGattDeviceService>(service.m_ptr)->Uuid(service.m_ptr.Get(), &service.m_UUID));
+
+		for (DataCharacteristic& characteristic : service.m_characteristicVec) {
+			CHK(GetVt<zIGattCharacteristic>(characteristic.m_ptr)->CharacteristicProperties(characteristic.m_ptr.Get(), &characteristic.m_properties));
+			characteristic.m_read = characteristic.m_properties & (int32_t)zGattCharacteristicProperties::Read;
+			characteristic.m_writ = characteristic.m_properties & (int32_t)zGattCharacteristicProperties::Write;
+		}
+	}
+
+	return dataDevice;
 }
 
 
-SelectedService serviceSelect(const DataDiscover &dataDiscover)
+SelectedService serviceSelect(const DataDevice &dataDevice)
 {
-	typedef std::vector<DataCharacteristic>::iterator i_t;
+	auto first_readable = [](const std::vector<DataCharacteristic>& a) { return std::ranges::find_first_of(a, std::vector<bool> { true }, std::ranges::equal_to{}, & DataCharacteristic::m_read); };
+	auto first_writable = [](const std::vector<DataCharacteristic>& a) { return std::ranges::find_first_of(a, std::vector<bool> { true }, std::ranges::equal_to{}, & DataCharacteristic::m_writ); };
 
 	std::vector<DataService> s;
-	std::vector<SelectedService> e;
-	std::vector<SelectedService> f;
-	std::copy_if(std::begin(dataDiscover.m_serviceVec), std::end(dataDiscover.m_serviceVec), std::back_inserter(s),
+	std::vector<DataService> t;
+	std::vector<DataService> u;
+
+	// filter standard bluetooth services
+	std::copy_if(std::begin(dataDevice.m_serviceVec), std::end(dataDevice.m_serviceVec), std::back_inserter(s),
 		[](const DataService &a) {
-			return uint16FromBluetoothServiceUUID(a.m_uuid) == 0xFFFF;
+			return uint16FromBluetoothServiceUUID(a.m_UUID) == 0xFFFF;
 		});
-	std::transform(std::begin(s), std::end(s), std::back_inserter(e),
-		[](const DataService& a) -> SelectedService {
-			auto read = std::find_if(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), [](const DataCharacteristic& b) { return b.m_read; });
-			auto writ = std::find_if(std::begin(a.m_characteristicVec), std::end(a.m_characteristicVec), [](const DataCharacteristic& b) { return b.m_writ; });
-			return {
-				.m_service = a.m_uuid,
-				.m_characteristic_read = read != std::end(a.m_characteristicVec) ? read->m_uuid : uuidSentinel,
-				.m_characteristic_writ = writ != std::end(a.m_characteristicVec) ? writ->m_uuid : uuidSentinel };
+	// keep simultaneously readable and writable
+	std::copy_if(std::begin(s), std::end(s), std::back_inserter(t),
+		[&](const DataService& a) {
+			return first_readable(a.m_characteristicVec) != std::end(a.m_characteristicVec) && first_writable(a.m_characteristicVec) != std::end(a.m_characteristicVec);
 		});
-	std::copy_if(std::begin(e), std::end(e), std::back_inserter(f),
-		[](const SelectedService& a) {
-			return a.m_characteristic_read != uuidSentinel && a.m_characteristic_writ != uuidSentinel;
-		});
-	CHK(f.size() == 1 ? S_OK : E_FAIL);
 
-	return f.at(0);
-}
+	CHK(t.size() == 1 ? S_OK : E_FAIL);
 
+	auto& first = t.at(0);
 
-CommService CommServiceSelect(const SelectedService& selectedService, const std::vector<wrl::ComPtr<IUnknown>>& serv)
-{
-	auto read = std::find_if(std::begin(serv), std::end(serv),
-		[&selectedService](const wrl::ComPtr<IUnknown>& s) {
-			UUID u;
-			CHK(ComIsA(uuidIGattDeviceService, s.Get()));
-			CHK(GetVt<zIGattDeviceService>(s)->Uuid(s.Get(), &u));
-			return selectedService.m_service == u;
-		});
-	CHK(read != std::end(serv) ? S_OK : E_FAIL);
-	return { .m_selectedService = selectedService, .m_gattDeviceService = *read };
+	SelectedService selected = {
+		.m_device = dataDevice,
+		.m_service = first,
+		.m_characteristic_read = *first_readable(first.m_characteristicVec),
+		.m_characteristic_writ = *first_writable(first.m_characteristicVec),
+	};
+
+	return selected;
 }
 
 
@@ -286,16 +260,8 @@ void probe(const ScannedDevice& scannedDevice)
 
 	deviceFromBluetoothAddress(scannedDevice.m_bluetoothAddress, &bluetoothLEDevice, &bluetoothLEDevice3);
 
-	wrl::ComPtr<IUnknown> gattResult = gattDeviceServicesResult(bluetoothLEDevice3);
-
-	CHK(GetVt<zIGattDeviceServicesResult>(gattResult)->Services(gattResult.Get(), &services));
-	CHK(ComIsA(uuidIVectorView__GattDeviceService_star__, services.Get()));
-
-	std::vector<wrl::ComPtr<IUnknown>> serv = VectorViewGetManyHelper(services, uuidIGattDeviceService);
-
-	DataDiscover dataDiscover = serviceDiscover(serv);
+	DataDevice dataDiscover = deviceDiscover(bluetoothLEDevice3);
 	SelectedService selectedService = serviceSelect(dataDiscover);
-	CommService commServiceSelect = CommServiceSelect(selectedService, serv);
 }
 
 
