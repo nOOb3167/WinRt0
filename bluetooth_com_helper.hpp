@@ -1,5 +1,6 @@
 #include <codecvt>
 #include <condition_variable>
+#include <format>
 #include <functional>
 #include <locale>
 #include <mutex>
@@ -46,6 +47,15 @@ public:
 		m_cv.wait(l, [this]() { return m_completed == true; });
 	}
 };
+
+
+static std::string ToHex(const std::string& s)
+{
+	std::string r = "";
+	for (size_t i = 0; i < s.size(); i++)
+		r += std::format("{:02x}", *((unsigned char *)s.data()+i));
+	return r;
+}
 
 
 static void deleteHSTRING(HSTRING p)
