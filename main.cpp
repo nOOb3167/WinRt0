@@ -68,8 +68,18 @@ wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID u
 	wrl::ComPtr<ComHandlerWaitable_IAsyncOperation> cb = new ComHandlerWaitable_IAsyncOperation(uuidAsyncOperation, uuidAsyncOperationCompletedHandler);
 	CHK(GetVt<zIAsyncOperation>(asyncOperation)->Put_Completed(asyncOperation.Get(), cb.Get()));
 	cb->wait();
+
+	wrl::ComPtr<IUnknown> asyncInfo;
+	int32_t status;
+	HRESULT errorCode;
+	CHK(asyncOperation->QueryInterface(uuidIAsyncInfo, &asyncInfo));
+	CHK(GetVt<zIAsyncInfo>(asyncInfo)->Status(asyncInfo.Get(), &status));
+	CHK(GetVt<zIAsyncInfo>(asyncInfo)->ErrorCode(asyncInfo.Get(), &errorCode));
+	CHK(status == (int32_t)zAsyncStatus::Completed && errorCode == S_OK ? S_OK : E_FAIL);
+
 	wrl::ComPtr<IUnknown> result;
 	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &result));
+
 	if (nullResultAllowed && result == nullptr)
 		return nullptr;
 	CHK(ComIsA(uuidResult, result.Get()));

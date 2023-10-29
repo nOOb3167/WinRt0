@@ -46,6 +46,7 @@ static void _printuuid()
 	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory));
 	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*, ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs*>));
 	//_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs));
+	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncInfo));
 }
 
 
@@ -97,6 +98,15 @@ enum class zGattClientCharacteristicConfigurationDescriptorValue
 };
 
 
+enum class zAsyncStatus : int32_t
+{
+	Canceled = 2,
+	Completed = 1,
+	Error = 3,
+	Started = 0,
+};
+
+
 struct do_not_call_t
 {
 private:
@@ -132,6 +142,7 @@ typedef HRESULT (*zfWriteBytes)(IUnknown* thiz, uint32_t __valueSize, const char
 typedef HRESULT (*zfDetachBuffer)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfWriteClientCharacteristicConfigurationDescriptorAsync)(IUnknown* thiz, int32_t value, IUnknown** out);
 typedef HRESULT (*zfAdd_ValueChanged)(IUnknown* thiz, IUnknown* handler, EventRegistrationToken* tok);
+typedef HRESULT (*zfErrorCode)(IUnknown* thiz, HRESULT* value);
 
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
@@ -162,6 +173,7 @@ UUID uuidIDataWriter = { 1689817701, 54081, 18722, 179, 138, 221, 74, 248, 128, 
 UUID uuidIDataWriterFactory = { 864839618, 35716, 19499, 156, 80, 123, 135, 103, 132, 122, 31 }; // __uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory)
 UUID uuidITypedEventHandler__GattCharacteristic_star__GattValueChangedEventArgs_star__ = { 3254001910, 25234, 22368, 162, 201, 157, 223, 152, 104, 60, 252 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*, ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs*>)
 UUID uuidIGattValueChangedEventArgs = { 3525040980, 1763, 20184, 162, 99, 172, 250, 200, 186, 115, 19 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs)
+UUID uuidIAsyncInfo = { 54, 0, 0, 192, 0, 0, 0, 0, 0, 0, 70 }; // __uuidof(ABI::Windows::Foundation::IAsyncInfo)
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
@@ -259,6 +271,19 @@ struct zIAsyncOperation
 		zfPut_Completed Put_Completed;
 		zfnc _7;
 		zfGetResults GetResults;
+	};
+	vt* vt;
+};
+
+
+struct zIAsyncInfo
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfStatus Status;
+		zfErrorCode ErrorCode;
 	};
 	vt* vt;
 };
