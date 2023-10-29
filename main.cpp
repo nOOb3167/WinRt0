@@ -196,6 +196,53 @@ void writeCharacteristic(wrl::ComPtr<IUnknown> characteristic, std::string data)
 }
 
 
+std::string readCharacteristic(wrl::ComPtr<IUnknown> characteristic)
+{
+	wrl::ComPtr<IUnknown> asyncOperation;
+	wrl::ComPtr<IUnknown> result;
+	int32_t status;
+	wrl::ComPtr<IUnknown> buffer;
+	uint32_t length;
+	wrl::ComPtr<IUnknown> readerStatics;
+	wrl::ComPtr<IUnknown> reader;
+	uint32_t unconsumedLength;
+
+	CHK(ComIsA(uuidIGattCharacterictic, characteristic));
+
+	CHK(GetVt<zIGattCharacteristic>(characteristic)->ReadValueWithCacheModeAsync(characteristic.Get(), (int32_t)zBluetoothCacheMode::Uncached, &asyncOperation));
+
+	result = operationwait(
+		asyncOperation,
+		uuidIAsyncOperation__GattReadResult_star__,
+		uuidIAsyncOperationCompletedHandler__GattReadResult_star__,
+		uuidIGattReadResult);
+
+	CHK(GetVt<zIGattReadResult>(result)->Status(result.Get(), &status));
+	
+	CHK(status == (int32_t)zGattCommunicationStatus::Success ? S_OK : E_FAIL);
+
+	CHK(GetVt<zIGattReadResult>(result)->Value(result.Get(), &buffer));
+
+	CHK(ComIsA(uuidIBuffer, buffer));
+
+	CHK(GetVt<zIBuffer>(buffer)->Length(buffer.Get(), &length));
+
+	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataReader").Get(), uuidIDataReaderStatics, &readerStatics));
+
+	CHK(GetVt<zfIDataReaderStatics>(readerStatics)->FromBuffer(readerStatics.Get(), buffer.Get(), &reader));
+
+	CHK(ComIsA(uuidIDataReader, reader));
+
+#define BT_ARBITRARY_MAX_READ_SIZE 1024
+	CHK(length < BT_ARBITRARY_MAX_READ_SIZE ? S_OK : E_FAIL);
+	std::string data(length, '\0');
+	CHK(GetVt<zfIDataReader>(reader)->UnconsumedBufferLength(reader.Get(), &unconsumedLength));
+	CHK(GetVt<zfIDataReader>(reader)->ReadBytes(reader.Get(), (uint32_t)data.size(), data.data()));
+
+	return data;
+}
+
+
 void subscribeNotifyCharacteristic(wrl::ComPtr<IUnknown> characteristic)
 {
 	CHK(ComIsA(uuidIGattCharacterictic, characteristic));
@@ -337,7 +384,10 @@ void probe(const ScannedDevice& scannedDevice)
 
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
 	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00");
-	Sleep(5000);
+
+	Sleep(3000);
+
+	println(cout, "data [{}]", readCharacteristic(selectedService.m_characteristic_read.m_ptr));
 }
 
 

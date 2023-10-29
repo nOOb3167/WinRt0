@@ -42,8 +42,13 @@ static void _printuuid()
 	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IBuffer));
 	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>));
 	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>));
+	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattReadResult*>));
+	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattReadResult*>));
+	//_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattReadResult));
 	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataWriter));
 	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory));
+	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataReaderStatics));
+	//_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataReader));
 	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*, ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs*>));
 	//_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs));
 	//_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncInfo));
@@ -143,6 +148,12 @@ typedef HRESULT (*zfDetachBuffer)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfWriteClientCharacteristicConfigurationDescriptorAsync)(IUnknown* thiz, int32_t value, IUnknown** out);
 typedef HRESULT (*zfAdd_ValueChanged)(IUnknown* thiz, IUnknown* handler, EventRegistrationToken* tok);
 typedef HRESULT (*zfErrorCode)(IUnknown* thiz, HRESULT* value);
+typedef HRESULT (*zfReadValueWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** asyncOp);
+typedef HRESULT (*zfValue)(IUnknown* thiz, IUnknown** out);
+typedef HRESULT (*zfFromBuffer)(IUnknown* thiz, IUnknown* buffer, IUnknown** out);
+typedef HRESULT (*zfReadBytes)(IUnknown* thiz, uint32_t, const char* value);
+typedef HRESULT (*zfUnconsumedBufferLength)(IUnknown* thiz, uint32_t* length);
+typedef HRESULT (*zfLength)(IUnknown* thiz, uint32_t* length);
 
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
@@ -169,11 +180,17 @@ UUID uuidIGattDeviceServicesResult = { 387830766, 365, 16797, 131, 138, 87, 108,
 UUID uuidIBuffer = { 2421821408, 48211, 4575, 140, 73, 0, 30, 79, 198, 134, 218 }; // __uuidof(ABI::Windows::Storage::Streams::IBuffer)
 UUID uuidIASyncOperation__GattCommunicationStatus__ = { 1073124630, 7163, 21225, 158, 230, 229, 205, 183, 142, 22, 131 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>)
 UUID uuidIASyncOperationCompletedHandler__GattCommunicationStatus__ = { 559157626, 38797, 23003, 153, 207, 107, 105, 12, 179, 56, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>)
+UUID uuidIAsyncOperation__GattReadResult_star__ = { 3557044904, 7700, 20944, 180, 155, 174, 44, 225, 170, 5, 229 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattReadResult*>)
+UUID uuidIAsyncOperationCompletedHandler__GattReadResult_star__ = { 3633916576, 60098, 21943, 146, 197, 137, 72, 134, 190, 176, 202 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattReadResult*>)
+UUID uuidIGattReadResult = { 1671851784, 6890, 19532, 165, 15, 151, 186, 228, 116, 179, 72 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattReadResult)
 UUID uuidIDataWriter = { 1689817701, 54081, 18722, 179, 138, 221, 74, 248, 128, 140, 78 }; // __uuidof(ABI::Windows::Storage::Streams::IDataWriter)
 UUID uuidIDataWriterFactory = { 864839618, 35716, 19499, 156, 80, 123, 135, 103, 132, 122, 31 }; // __uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory)
 UUID uuidITypedEventHandler__GattCharacteristic_star__GattValueChangedEventArgs_star__ = { 3254001910, 25234, 22368, 162, 201, 157, 223, 152, 104, 60, 252 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCharacteristic*, ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattValueChangedEventArgs*>)
 UUID uuidIGattValueChangedEventArgs = { 3525040980, 1763, 20184, 162, 99, 172, 250, 200, 186, 115, 19 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs)
 UUID uuidIAsyncInfo = { 54, 0, 0, 192, 0, 0, 0, 0, 0, 0, 70 }; // __uuidof(ABI::Windows::Foundation::IAsyncInfo)
+UUID uuidIDataReaderStatics = { 301776840, 63802, 18203, 177, 33, 243, 121, 227, 73, 49, 60 }; // __uuidof(ABI::Windows::Storage::Streams::IDataReaderStatics);
+UUID uuidIDataReader = { 3803512873, 46273, 17172, 164, 184, 251, 129, 58, 47, 39, 94 }; // __uuidof(ABI::Windows::Storage::Streams::IDataReader)
+
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
@@ -360,7 +377,7 @@ struct zIGattCharacteristic
 		zfnc _12;
 		zfnc _13;
 		zfnc _14;
-		zfnc _15;
+		zfReadValueWithCacheModeAsync ReadValueWithCacheModeAsync;
 		zfWriteValueAsync WriteValueAsync;
 		zfnc _17;
 		zfnc _18;
@@ -440,6 +457,60 @@ struct zfIDataWriter
 		zfnc _29;
 		zfnc _30;
 		zfDetachBuffer DetachBuffer;
+	};
+	vt* vt;
+};
+
+
+struct zfIDataReaderStatics
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfFromBuffer FromBuffer;
+	};
+	vt* vt;
+};
+
+
+struct zfIDataReader
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfUnconsumedBufferLength UnconsumedBufferLength;
+		zfnc _7;
+		zfnc _8;
+		zfnc _9;
+		zfnc _10;
+		zfnc _11;
+		zfnc _12;
+		zfnc _13;
+		zfReadBytes ReadBytes;
+	};
+	vt* vt;
+};
+
+
+struct zIGattReadResult
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfStatus Status;
+		zfValue Value;
+	};
+	vt* vt;
+};
+
+
+struct zIBuffer
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfLength Length;
 	};
 	vt* vt;
 };
