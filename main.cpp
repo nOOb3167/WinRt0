@@ -165,6 +165,13 @@ std::vector<wrl::ComPtr<IUnknown>> getServiceCharacteristics(wrl::ComPtr<IUnknow
 }
 
 
+template<typename T>
+void writeCharacteristic(T do_not_call, const char* do_not_call_)
+{
+	do_not_call->do_not_call();
+}
+
+
 void writeCharacteristic(wrl::ComPtr<IUnknown> characteristic, std::string data)
 {
 	wrl::ComPtr<IUnknown> asyncOperation;
@@ -383,10 +390,7 @@ void probe(const ScannedDevice& scannedDevice)
 	SelectedService selectedService = serviceSelect(dataDiscover);
 
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
-	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00");
-
-	Sleep(3000);
-
+	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00"s);
 	println(cout, "data [{}]", readCharacteristic(selectedService.m_characteristic_read.m_ptr));
 }
 
