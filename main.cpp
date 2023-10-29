@@ -62,7 +62,7 @@ bool isStandardServiceUUID(UUID serviceUUID)
 }
 
 
-wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID uuidAsyncOperation, UUID uuidAsyncOperationCompletedHandler, UUID uuidResult)
+wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID uuidAsyncOperation, UUID uuidAsyncOperationCompletedHandler, UUID uuidResult, bool nullResultAllowed = false)
 {
 	CHK(ComIsA(uuidAsyncOperation, asyncOperation.Get()));
 	wrl::ComPtr<ComHandlerWaitable_IAsyncOperation> cb = new ComHandlerWaitable_IAsyncOperation(uuidAsyncOperation, uuidAsyncOperationCompletedHandler);
@@ -70,6 +70,8 @@ wrl::ComPtr<IUnknown> operationwait(wrl::ComPtr<IUnknown> asyncOperation, UUID u
 	cb->wait();
 	wrl::ComPtr<IUnknown> result;
 	CHK(GetVt<zIAsyncOperation>(asyncOperation)->GetResults(asyncOperation.Get(), &result));
+	if (nullResultAllowed && result == nullptr)
+		return nullptr;
 	CHK(ComIsA(uuidResult, result.Get()));
 	return result;
 }
@@ -150,6 +152,37 @@ std::vector<wrl::ComPtr<IUnknown>> getServiceCharacteristics(wrl::ComPtr<IUnknow
 	CHK(ComIsA(uuidIVectorView__GattCharacteristic_star__, characteristics));
 
 	return VectorViewGetManyHelper(characteristics, uuidIGattCharacterictic);
+}
+
+
+void writeCharacteristic(wrl::ComPtr<IUnknown> characteristic, std::string data)
+{
+	wrl::ComPtr<IUnknown> asyncOperation;
+	wrl::ComPtr<IUnknown> result;
+
+	[[maybe_unused]] wrl::ComPtr<IUnknown> writerFactory;
+
+	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataWriter").Get(), uuidIDataWriterFactory, &writerFactory));
+
+	wrl::ComPtr<IInspectable> writer;
+	wrl::ComPtr<IInspectable> buffer;
+
+	CHK(RoActivateInstance(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataWriter").Get(), &writer));
+
+	CHK(GetVt<zfIDataWriter>(writer)->WriteBytes(writer.Get(), (uint32_t)data.size(), data.data()));
+	CHK(GetVt<zfIDataWriter>(writer)->DetachBuffer(writer.Get(), &buffer));
+	CHK(ComIsA(uuidIBuffer, buffer.Get()));
+
+	CHK(GetVt<zIGattCharacteristic>(characteristic)->WriteValueAsync(characteristic.Get(), buffer.Get(), &asyncOperation));
+
+	result = operationwait(
+		asyncOperation,
+		uuidIASyncOperation__GattCommunicationStatus__,
+		uuidIASyncOperationCompletedHandler__GattCommunicationStatus__,
+		uuidSentinel,
+		true);
+
+	CHK(result == nullptr ? S_OK : E_FAIL);
 }
 
 
@@ -262,6 +295,8 @@ void probe(const ScannedDevice& scannedDevice)
 
 	DataDevice dataDiscover = deviceDiscover(bluetoothLEDevice3);
 	SelectedService selectedService = serviceSelect(dataDiscover);
+
+	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "test");
 }
 
 

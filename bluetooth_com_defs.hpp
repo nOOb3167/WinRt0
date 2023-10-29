@@ -12,6 +12,7 @@
 
 #include <windows.foundation.collections.h>
 #include <windows.devices.bluetooth.genericattributeprofile.h>
+#include <windows.storage.streams.h>
 
 
 namespace bt
@@ -38,6 +39,11 @@ static void _printuuid()
 {
 #define _PRINTUUID(x) PrintUUID(x, #x)
 	_PRINTUUID(__uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService));
+	_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IBuffer));
+	_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>));
+	_PRINTUUID(__uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>));
+	_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataWriter));
+	_PRINTUUID(__uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory));
 }
 
 
@@ -110,6 +116,10 @@ typedef HRESULT (*zfUuid)(IUnknown* thiz, UUID* value);
 typedef HRESULT (*zfGetCharacteristicsWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** out);
 typedef HRESULT (*zfCharacteristics)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfCharacteristicProperties)(IUnknown* thiz, int32_t *value);
+typedef HRESULT (*zfWriteValueAsync)(IUnknown* thiz, IUnknown* buffer, IUnknown** asyncOp);
+typedef HRESULT (*zfCreateDataWriter)(IUnknown* thiz, IUnknown** out);
+typedef HRESULT (*zfWriteBytes)(IUnknown* thiz, uint32_t __valueSize, const char* value);
+typedef HRESULT (*zfDetachBuffer)(IUnknown* thiz, IUnknown** out);
 
 
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
@@ -133,6 +143,11 @@ UUID uuidIGattDeviceService3 = { 2996021584, 3155, 17276, 169, 179, 92, 50, 16, 
 UUID uuidIGattCharacterictic = { 1506496705, 22836, 20328, 161, 152, 235, 134, 79, 164, 78, 107 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic)
 UUID uuidIGattCharacteristicsResult = { 294949980, 45655, 20286, 157, 183, 246, 139, 201, 169, 174, 242 } ; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristicsResult)
 UUID uuidIGattDeviceServicesResult = { 387830766, 365, 16797, 131, 138, 87, 108, 244, 117, 163, 216 }; // __uuidof(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceServicesResult)
+UUID uuidIBuffer = { 2421821408, 48211, 4575, 140, 73, 0, 30, 79, 198, 134, 218 }; // __uuidof(ABI::Windows::Storage::Streams::IBuffer)
+UUID uuidIASyncOperation__GattCommunicationStatus__ = { 1073124630, 7163, 21225, 158, 230, 229, 205, 183, 142, 22, 131 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>)
+UUID uuidIASyncOperationCompletedHandler__GattCommunicationStatus__ = { 559157626, 38797, 23003, 153, 207, 107, 105, 12, 179, 56, 155 }; // __uuidof(ABI::Windows::Foundation::IAsyncOperationCompletedHandler<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattCommunicationStatus>)
+UUID uuidIDataWriter = { 1689817701, 54081, 18722, 179, 138, 221, 74, 248, 128, 140, 78 }; // __uuidof(ABI::Windows::Storage::Streams::IDataWriter)
+UUID uuidIDataWriterFactory = { 864839618, 35716, 19499, 156, 80, 123, 135, 103, 132, 122, 31 }; // __uuidof(ABI::Windows::Storage::Streams::IDataWriterFactory)
 
 // special UUID parsed to discover GATT Services (https://bitbucket.org/bluetooth-SIG/public/src/main/assigned_numbers/uuids/service_uuids.yaml) also qbluetoothuuid.cpp@toUInt16
 UUID uuidBluetoothBaseUUID = MakeUUID("00000000-0000-1000-8000-00805F9B34FB");
@@ -303,6 +318,11 @@ struct zIGattCharacteristic
 		zfnc _9;
 		zfnc _10;
 		zfUuid Uuid;
+		zfnc _12;
+		zfnc _13;
+		zfnc _14;
+		zfnc _15;
+		zfWriteValueAsync WriteValueAsync;
 	};
 	vt* vt;
 };
@@ -330,6 +350,53 @@ struct zIBluetoothLEAdvertisement
 		zfnc _6;
 		zfnc _7;
 		zfLocalName LocalName;
+	};
+	vt* vt;
+};
+
+
+struct zfIDataWriterFactory
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfCreateDataWriter CreateDataWriter;
+	};
+	vt* vt;
+};
+
+
+struct zfIDataWriter
+{
+	struct vt
+	{
+		vt_iinspectable base;
+		zfnc _6;
+		zfnc _7;
+		zfnc _8;
+		zfnc _9;
+		zfnc _10;
+		zfnc _11;
+		zfWriteBytes WriteBytes;
+		zfnc _13;
+		zfnc _14;
+		zfnc _15;
+		zfnc _16;
+		zfnc _17;
+		zfnc _18;
+		zfnc _19;
+		zfnc _20;
+		zfnc _21;
+		zfnc _22;
+		zfnc _23;
+		zfnc _24;
+		zfnc _25;
+		zfnc _26;
+		zfnc _27;
+		zfnc _28;
+		zfnc _29;
+		zfnc _30;
+		zfDetachBuffer DetachBuffer;
 	};
 	vt* vt;
 };
