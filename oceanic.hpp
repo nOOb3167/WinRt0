@@ -15,6 +15,9 @@ namespace bt
 {
 
 
+using namespace std::string_literals;
+
+
 struct Header
 {
 	uint8_t m_magic;
@@ -43,10 +46,14 @@ struct OcPacket
 
 	static OcPacket FromCommandRequestAccess()
 	{
-		using namespace std::string_literals;
-		Header h = { .m_magic = OcPacket::magic, .m_flags = 0x40, .m_command = 0xfa, .m_unk00 = 0xf6, };
-		std::string data = "\x00\x00\x00\x00\x00\x00\x00\x00\x00"s;
-		return { .m_header = h, .m_data = data, };
+		return { .m_header = { .m_magic = OcPacket::magic, .m_flags = 0x40, .m_command = 0xfa, .m_unk00 = 0xf6, }, .m_data = "\x00\x00\x00\x00\x00\x00\x00\x00\x00"s, };
+	}
+
+
+	static OcPacket FromCommandRequestAccessData()
+	{
+		// FIXME: hardcoded
+		return { .m_header = { .m_magic = OcPacket::magic, .m_flags = 0x80, .m_command = 0xfa, .m_unk00 = 0x42, }, .m_data = "\x1a\x0c\x16\xff\x4e\x53\x15\x90\x00\x20\x47\x44\x31\x31\x20\xff"s, };
 	}
 
 
@@ -83,6 +90,8 @@ struct OcRequestResponse
 	{
 		m_writ(OcPacket::FromCommandRequestAccess());
 		OcPacket p0 = m_read();
+		m_writ(OcPacket::FromCommandRequestAccessData());
+		OcPacket p1 = m_read();
 	}
 
 	std::vector<OcPacket> m_request;
