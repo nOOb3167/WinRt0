@@ -1,5 +1,6 @@
 #include <codecvt>
 #include <condition_variable>
+#include <format>
 #include <functional>
 #include <locale>
 #include <mutex>
@@ -50,14 +51,12 @@ public:
 };
 
 
-static std::string ToHex(const std::string& data)
+static std::string ToHex(const std::string& s)
 {
-	std::string buffer(data.size() * 2, '\0');
-
-	for (size_t j = 0; j < data.size(); j++)
-		CHK(0 < sprintf(&buffer.data()[2 * j], "%02hhx", (unsigned char)data[j]));
-
-	return buffer;
+	std::string r = "";
+	for (size_t i = 0; i < s.size(); i++)
+		r += std::format("{:02x}", *((unsigned char *)s.data()+i));
+	return r;
 }
 
 

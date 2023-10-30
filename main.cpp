@@ -270,7 +270,7 @@ void subscribeNotifyCharacteristic(wrl::ComPtr<IUnknown> characteristic)
 
 	wrl::ComPtr<ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs> cb = new ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs(
 		[]() {
-			std::cout << "response" << std::endl;
+			cout << "response" << std::endl;
 		}
 	);
 
@@ -391,7 +391,7 @@ void probe(const ScannedDevice& scannedDevice)
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
 	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00"s);
 
-	std::cout << ToHex(readCharacteristic(selectedService.m_characteristic_read.m_ptr)) << std::endl;
+	cout << "response: " << ToHex(readCharacteristic(selectedService.m_characteristic_read.m_ptr)) << std::endl;
 }
 
 
