@@ -390,10 +390,20 @@ void probe(const ScannedDevice& scannedDevice)
 	SelectedService selectedService = serviceSelect(dataDiscover);
 
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
-	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00"s);
 
-	OcPacket packet0 = OcPacket::FromReceived(readCharacteristic(selectedService.m_characteristic_read.m_ptr));
-	cout << "response: " << format("{}", packet0) << std::endl;
+	auto read = [&]() {
+		OcPacket p = OcPacket::FromReceived(readCharacteristic(selectedService.m_characteristic_read.m_ptr));
+		std::cout << "read: " << std::format("{}", p) << std::endl;
+		return p;
+	};
+	auto writ = [&](const OcPacket& p) {
+		std::cout << "writ: " << std::format("{}", p) << std::endl;
+		writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, p.GetWireData());
+	};
+
+	OcRequestResponse rrRequestAccess(read, writ);
+
+	rrRequestAccess.RequestAccess();
 }
 
 
