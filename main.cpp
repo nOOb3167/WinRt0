@@ -25,7 +25,6 @@
 #include <numeric>
 #include <locale>
 #include <codecvt>
-#include <format>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -94,7 +93,7 @@ void deviceFromBluetoothAddress(uint64_t bluetoothAddress, wrl::ComPtr<IUnknown>
 	wrl::ComPtr<IUnknown> bluetoothLEDevice;
 	wrl::ComPtr<IUnknown> bluetoothLEDevice3;
 
-	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice").Get(), uuidIBluetoothLEDeviceStatics, &bluetoothLEDeviceStatics));
+	CHK(RoGetActivationFactory(wrlw::HStringReference(L"Windows.Devices.Bluetooth.BluetoothLEDevice").Get(), uuidIBluetoothLEDeviceStatics, &bluetoothLEDeviceStatics));
 	
 	CHK(GetVt<zIBluetoothLEDeviceStatics>(bluetoothLEDeviceStatics)->FromBluetoothAddressAsync(bluetoothLEDeviceStatics.Get(), bluetoothAddress, &asyncOperation));
 
@@ -179,12 +178,12 @@ void writeCharacteristic(wrl::ComPtr<IUnknown> characteristic, std::string data)
 
 	[[maybe_unused]] wrl::ComPtr<IUnknown> writerFactory;
 
-	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataWriter").Get(), uuidIDataWriterFactory, &writerFactory));
+	CHK(RoGetActivationFactory(wrlw::HStringReference(L"Windows.Storage.Streams.DataWriter").Get(), uuidIDataWriterFactory, &writerFactory));
 
 	wrl::ComPtr<IInspectable> writer;
 	wrl::ComPtr<IInspectable> buffer;
 
-	CHK(RoActivateInstance(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataWriter").Get(), &writer));
+	CHK(RoActivateInstance(wrlw::HStringReference(L"Windows.Storage.Streams.DataWriter").Get(), &writer));
 
 	CHK(GetVt<zfIDataWriter>(writer)->WriteBytes(writer.Get(), (uint32_t)data.size(), data.data()));
 	CHK(GetVt<zfIDataWriter>(writer)->DetachBuffer(writer.Get(), &buffer));
@@ -234,7 +233,7 @@ std::string readCharacteristic(wrl::ComPtr<IUnknown> characteristic)
 
 	CHK(GetVt<zIBuffer>(buffer)->Length(buffer.Get(), &length));
 
-	CHK(RoGetActivationFactory(wrlw::HString::MakeReference(L"Windows.Storage.Streams.DataReader").Get(), uuidIDataReaderStatics, &readerStatics));
+	CHK(RoGetActivationFactory(wrlw::HStringReference(L"Windows.Storage.Streams.DataReader").Get(), uuidIDataReaderStatics, &readerStatics));
 
 	CHK(GetVt<zfIDataReaderStatics>(readerStatics)->FromBuffer(readerStatics.Get(), buffer.Get(), &reader));
 
@@ -256,7 +255,7 @@ void subscribeNotifyCharacteristic(wrl::ComPtr<IUnknown> characteristic)
 
 	wrl::ComPtr<IUnknown> asyncOperation;
 	wrl::ComPtr<IUnknown> result;
-	EventRegistrationToken token_unused;
+	zEventRegistrationToken token_unused;
 
 	CHK(GetVt<zIGattCharacteristic>(characteristic)->WriteClientCharacteristicConfigurationDescriptorAsync(characteristic.Get(), (int32_t)zGattClientCharacteristicConfigurationDescriptorValue::Notify, &asyncOperation));
 
@@ -271,7 +270,7 @@ void subscribeNotifyCharacteristic(wrl::ComPtr<IUnknown> characteristic)
 
 	wrl::ComPtr<ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs> cb = new ComHandler_ITypedEventHandler_GattCharacteristic_GattValueChangedEventArgs(
 		[]() {
-			println(cout, "response");
+			std::cout << "response" << std::endl;
 		}
 	);
 
@@ -391,7 +390,8 @@ void probe(const ScannedDevice& scannedDevice)
 
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
 	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00"s);
-	println(cout, "data [{}]", ToHex(readCharacteristic(selectedService.m_characteristic_read.m_ptr)));
+
+	std::cout << ToHex(readCharacteristic(selectedService.m_characteristic_read.m_ptr)) << std::endl;
 }
 
 
@@ -404,8 +404,6 @@ void stuff()
 	scanner->wait();
 
 	probe(scanner->m_devices.at(0));
-
-	println(cout, "");
 }
 
 

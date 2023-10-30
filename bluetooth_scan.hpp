@@ -44,7 +44,7 @@ private:
 
 Scanner::Scanner() : m_watcher(_makeWatcher())
 {
-	EventRegistrationToken token_unused;
+	zEventRegistrationToken token_unused;
 
 	CHK(GetVt<zIBluetoothLEAdvertisementWatcher>(m_watcher)->ScanningMode_Set(m_watcher.Get(), (int32_t)zBluetoothLEScanningMode::Active));
 

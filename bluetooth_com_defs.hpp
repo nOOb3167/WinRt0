@@ -9,14 +9,20 @@
 #include <windows.h>
 #include <wrl.h>
 
-
+#ifdef zNOTMINGW
 #include <windows.foundation.collections.h>
 #include <windows.devices.bluetooth.genericattributeprofile.h>
 #include <windows.storage.streams.h>
-
+#endif // zNOTMINGW
 
 namespace bt
 {
+
+
+struct zEventRegistrationToken
+{
+	char m_do_not_use[1024];
+};
 
 
 static UUID MakeUUID(std::string s)
@@ -30,8 +36,10 @@ static UUID MakeUUID(std::string s)
 
 static void PrintUUID(UUID uuid, std::string s)
 {
+#ifdef zNOTMINGW
 	println(std::cout, "{{ {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} }}; // {}", uuid.Data1, uuid.Data2, uuid.Data3,
 		uuid.Data4[0], uuid.Data4[1], uuid.Data4[2], uuid.Data4[3], uuid.Data4[4], uuid.Data4[5], uuid.Data4[6], uuid.Data4[7], s);
+#endif // zNOTMINGW
 }
 
 
@@ -125,7 +133,7 @@ typedef void (*zfnc)(do_not_call_t);
 typedef HRESULT (*zfScanningMode_Set)(IUnknown* thiz, int32_t bluetoothLEScanningMode);
 typedef HRESULT (*zfStart)(IUnknown* thiz);
 typedef HRESULT (*zfStop)(IUnknown* thiz);
-typedef HRESULT (*zfReceived)(IUnknown *thiz, IUnknown* handler, EventRegistrationToken *tok);
+typedef HRESULT (*zfReceived)(IUnknown *thiz, IUnknown* handler, zEventRegistrationToken *tok);
 typedef HRESULT (*zfBluetoothAddress)(IUnknown* thiz, uint64_t *value);
 typedef HRESULT (*zfAdvertisement)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfLocalName)(IUnknown* thiz, HSTRING* value);
@@ -146,7 +154,7 @@ typedef HRESULT (*zfCreateDataWriter)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfWriteBytes)(IUnknown* thiz, uint32_t __valueSize, const char* value);
 typedef HRESULT (*zfDetachBuffer)(IUnknown* thiz, IUnknown** out);
 typedef HRESULT (*zfWriteClientCharacteristicConfigurationDescriptorAsync)(IUnknown* thiz, int32_t value, IUnknown** out);
-typedef HRESULT (*zfAdd_ValueChanged)(IUnknown* thiz, IUnknown* handler, EventRegistrationToken* tok);
+typedef HRESULT (*zfAdd_ValueChanged)(IUnknown* thiz, IUnknown* handler, zEventRegistrationToken* tok);
 typedef HRESULT (*zfErrorCode)(IUnknown* thiz, HRESULT* value);
 typedef HRESULT (*zfReadValueWithCacheModeAsync)(IUnknown* thiz, int32_t cacheMode, IUnknown** asyncOp);
 typedef HRESULT (*zfValue)(IUnknown* thiz, IUnknown** out);
@@ -156,6 +164,7 @@ typedef HRESULT (*zfUnconsumedBufferLength)(IUnknown* thiz, uint32_t* length);
 typedef HRESULT (*zfLength)(IUnknown* thiz, uint32_t* length);
 
 
+UUID uuidIUnknown = { 0, 0, 0, 192, 0, 0, 0, 0, 0, 0, 70 }; // __uuidof(IUnknown)
 UUID uuidTypedEventHandlerReceivedTEH = { 2431340234, 54373, 24224,  166, 28, 3, 60, 140, 94, 206, 242 }; // __uuidof(ABI::Windows::Foundation::ITypedEventHandler<ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementWatcher*, ABI::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisementReceivedEventArgs*>)
 UUID uuidIBluetoothLEAdvertisementWatcher = MakeUUID("A6AC336F-F3D3-4297-8D6C-C81EA6623F40");
 UUID uuidIBluetoothLEAdvertisementReceivedEventArgs = MakeUUID("27987DDF-E596-41BE-8D43-9E6731D4A913");

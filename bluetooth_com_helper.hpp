@@ -1,12 +1,13 @@
 #include <codecvt>
 #include <condition_variable>
-#include <format>
 #include <functional>
 #include <locale>
 #include <mutex>
 #include <stdexcept>
 #include <string>
 #include <vector>
+
+#include <stdio.h>
 
 #include <roapi.h>
 #include <windows.h>
@@ -49,12 +50,14 @@ public:
 };
 
 
-static std::string ToHex(const std::string& s)
+static std::string ToHex(const std::string& data)
 {
-	std::string r = "";
-	for (size_t i = 0; i < s.size(); i++)
-		r += std::format("{:02x}", *((unsigned char *)s.data()+i));
-	return r;
+	std::string buffer(data.size() * 2, '\0');
+
+	for (size_t j = 0; j < data.size(); j++)
+		CHK(0 < sprintf(&buffer.data()[2 * j], "%02hhx", (unsigned char)data[j]));
+
+	return buffer;
 }
 
 
@@ -136,7 +139,7 @@ protected:
 public:
 	ComBase(const std::vector<UUID>& implementedUUIDs) : m_ref(1), m_implementedUUIDs(implementedUUIDs)
 	{
-		m_implementedUUIDs.push_back(IID_IUnknown);
+		m_implementedUUIDs.push_back(uuidIUnknown);
 	}
 
 	HRESULT STDMETHODCALLTYPE QueryInterface(REFIID riid, void** ppv) override
