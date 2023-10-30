@@ -36,6 +36,7 @@
 #include <wrl.h>
 
 #include <bluetooth_scan.hpp>
+#include <oceanic.hpp>
 
 
 namespace wrl = Microsoft::WRL;
@@ -391,7 +392,8 @@ void probe(const ScannedDevice& scannedDevice)
 	subscribeNotifyCharacteristic(selectedService.m_characteristic_read.m_ptr);
 	writeCharacteristic(selectedService.m_characteristic_writ.m_ptr, "\xcd\x40\xfa\xf6\x09\x00\x00\x00\x00\x00\x00\x00\x00\x00"s);
 
-	cout << "response: " << ToHex(readCharacteristic(selectedService.m_characteristic_read.m_ptr)) << std::endl;
+	OcPacket packet0 = OcPacket::FromReceived(readCharacteristic(selectedService.m_characteristic_read.m_ptr));
+	cout << "response: " << format("{}", packet0) << std::endl;
 }
 
 

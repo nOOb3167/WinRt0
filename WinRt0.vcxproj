@@ -133,6 +133,7 @@
     <ClInclude Include="bluetooth_com_defs.hpp" />
     <ClInclude Include="bluetooth_com_helper.hpp" />
     <ClCompile Include="main.cpp" />
+    <ClInclude Include="oceanic.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bluetooth_scan.hpp" />

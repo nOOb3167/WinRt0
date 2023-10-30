@@ -1,3 +1,5 @@
+#pragma once
+
 #include <codecvt>
 #include <condition_variable>
 #include <format>
@@ -20,6 +22,7 @@
 
 #define WSTR2STR(x) (std::wstring_convert<std::codecvt_utf8<wchar_t>>().to_bytes(x))
 #define CHK(x) { if (FAILED(x)) throw std::runtime_error("Failure[" #x "]"); }
+#define CHL(x) { if (!(x)) throw std::runtime_error("Failure[" #x "]"); }
 
 
 namespace bt {

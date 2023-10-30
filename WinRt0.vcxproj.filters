@@ -29,6 +29,9 @@
     <ClInclude Include="bluetooth_com_defs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="oceanic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Makefile" />

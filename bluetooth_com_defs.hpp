@@ -1,3 +1,5 @@
+#pragma once
+
 #include <codecvt>
 #include <iostream>
 #include <locale>
